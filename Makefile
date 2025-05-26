@@ -6,5 +6,8 @@ build:
 run:
 	./app
 
+build-run:
+	make build && make run
+
 clean:
 	rm app

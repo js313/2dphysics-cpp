@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "./Physics/Constants.h"
 
 bool Application::IsRunning()
 {
@@ -41,7 +42,22 @@ void Application::Input()
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Update()
 {
-    particle->velocity = Vec2(2.0, 0.0);
+    // Cap FPS
+    static int lastFrameTime;
+    int timeToWait = MILLISECS_PER_FRAME - (SDL_GetTicks() - lastFrameTime);
+    if (timeToWait > 0)
+        SDL_Delay(timeToWait);
+
+    // To achieve framerate independent movement
+    // Calculate this only after applying delay(capping FPS), or else the lastFrameTime won't be correct.
+    // it would take the frame that we decided not to update anything on as the last frame, we want the frame
+    // that made changes to the screen
+    int currentFrameTime = SDL_GetTicks();
+    float deltaTime = (currentFrameTime - lastFrameTime) / 1000.0f;
+
+    lastFrameTime = currentFrameTime;
+
+    particle->velocity = Vec2(200.0 * deltaTime, 100.0 * deltaTime);
 
     particle->position += particle->velocity;
 }
