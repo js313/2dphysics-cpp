@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "./Physics/Constants.h"
+#include <iostream>
 
 bool Application::IsRunning()
 {
@@ -12,8 +13,11 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-
-    particle = new Particle(50, 100, 1.0);
+    for (int i = 0; i < 2; i++)
+    {
+        particles.push_back(new Particle(50, 100, 1.0, 4.0));
+        particles.push_back(new Particle(100, 100, 3.0, 10.0));
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -57,9 +61,33 @@ void Application::Update()
 
     lastFrameTime = currentFrameTime;
 
-    particle->velocity = Vec2(200.0 * deltaTime, 100.0 * deltaTime);
+    for (Particle *particle : particles)
+    {
+        // Wind
+        particle->AddForce(Vec2(2 * PIXELS_PER_METRE, 0));
+        // Weight
+        particle->AddForce(Vec2(0, particle->mass * 9.8f * PIXELS_PER_METRE));
+        particle->Integrate(deltaTime);
 
-    particle->position += particle->velocity;
+        int minWidthBound = 0, minHeightBound = 0;
+        int maxWidthBound = Graphics::Width(), maxHeightBound = Graphics::Height();
+        if (particle->position.x - particle->radius < minWidthBound || particle->position.x + particle->radius > maxWidthBound)
+        {
+            particle->velocity.x *= -1;
+            if (particle->position.x + particle->radius < minWidthBound)
+                particle->position.x = particle->radius;
+            else
+                particle->position.x = maxWidthBound - particle->radius;
+        }
+        if (particle->position.y - particle->radius < minHeightBound || particle->position.y + particle->radius > maxHeightBound)
+        {
+            particle->velocity.y *= -1;
+            if (particle->position.y + particle->radius < minWidthBound)
+                particle->position.y = particle->radius;
+            else
+                particle->position.y = maxHeightBound - particle->radius;
+        }
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -69,7 +97,11 @@ void Application::Render()
 {
     Graphics::ClearScreen(0xFF056263);
     // Graphics::DrawFillCircle(200, 200, 40, 0xFFFFFFFF);
-    Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->mass, 0xFFFFFFFF);
+    for (Particle *particle : particles)
+    {
+
+        Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->mass * 4, 0xFFFFFFFF);
+    }
     Graphics::RenderFrame();
 }
 
@@ -78,7 +110,10 @@ void Application::Render()
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Destroy()
 {
-    // TODO: destroy all objects in the scene
+    for (Particle *particle : particles)
+    {
+        delete particle;
+    }
 
     Graphics::CloseWindow();
 }
