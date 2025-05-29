@@ -1,5 +1,6 @@
 #include "Application.h"
 #include "./Physics/Constants.h"
+#include "./Physics/Force.h"
 #include <iostream>
 
 bool Application::IsRunning()
@@ -15,6 +16,11 @@ void Application::Setup()
     running = Graphics::OpenWindow();
     particles.push_back(new Particle(50, 100, 1.0, 4.0));
     // particles.push_back(new Particle(100, 100, 3.0, 10.0));
+
+    liquid.x = 0;
+    liquid.y = Graphics::Height() / 2;
+    liquid.w = Graphics::Width();
+    liquid.h = Graphics::Height() / 2;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -52,6 +58,14 @@ void Application::Input()
             if (event.key.keysym.sym == SDLK_RIGHT)
                 pushForce.x = 0;
             break;
+        case SDL_MOUSEBUTTONDOWN:
+            if (event.button.button == SDL_BUTTON_LEFT)
+            {
+                int x = 0, y = 0;
+                SDL_GetMouseState(&x, &y);
+                particles.push_back(new Particle(x, y, 1.0, 5.0));
+            }
+            break;
         }
     }
 }
@@ -80,12 +94,16 @@ void Application::Update()
 
     for (Particle *particle : particles)
     {
-        // Wind
-        particle->AddForce(Vec2(2 * PIXELS_PER_METRE, 0));
         // Weight
         particle->AddForce(Vec2(0, particle->mass * 9.8f * PIXELS_PER_METRE));
         // Push
         particle->AddForce(pushForce);
+        if (particle->position.y > liquid.y)
+            // Drag
+            particle->AddForce(Force::GenerateDragForce(*particle, 0.01));
+        else
+            // Wind
+            particle->AddForce(Vec2(2 * PIXELS_PER_METRE, 0));
         particle->Integrate(deltaTime);
 
         int minWidthBound = 0, minHeightBound = 0;
@@ -116,9 +134,9 @@ void Application::Render()
 {
     Graphics::ClearScreen(0xFF056263);
     // Graphics::DrawFillCircle(200, 200, 40, 0xFFFFFFFF);
+    Graphics::DrawFillRect(liquid.x + liquid.w / 2, liquid.y + liquid.h / 2, liquid.w, liquid.h, 0xFF6E3713);
     for (Particle *particle : particles)
     {
-
         Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->mass * 4, 0xFFFFFFFF);
     }
     Graphics::RenderFrame();

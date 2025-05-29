@@ -12,6 +12,8 @@ private:
     std::vector<Particle *> particles;
     Vec2 pushForce;
 
+    SDL_Rect liquid;
+
 public:
     Application() = default;
     ~Application() = default;
