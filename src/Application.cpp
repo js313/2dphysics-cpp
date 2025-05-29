@@ -13,11 +13,8 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-    for (int i = 0; i < 2; i++)
-    {
-        particles.push_back(new Particle(50, 100, 1.0, 4.0));
-        particles.push_back(new Particle(100, 100, 3.0, 10.0));
-    }
+    particles.push_back(new Particle(50, 100, 1.0, 4.0));
+    // particles.push_back(new Particle(100, 100, 3.0, 10.0));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -36,6 +33,24 @@ void Application::Input()
         case SDL_KEYDOWN:
             if (event.key.keysym.sym == SDLK_ESCAPE)
                 running = false;
+            if (event.key.keysym.sym == SDLK_UP)
+                pushForce.y = -50 * PIXELS_PER_METRE;
+            if (event.key.keysym.sym == SDLK_DOWN)
+                pushForce.y = 50 * PIXELS_PER_METRE;
+            if (event.key.keysym.sym == SDLK_LEFT)
+                pushForce.x = -50 * PIXELS_PER_METRE;
+            if (event.key.keysym.sym == SDLK_RIGHT)
+                pushForce.x = 50 * PIXELS_PER_METRE;
+            break;
+        case SDL_KEYUP:
+            if (event.key.keysym.sym == SDLK_UP)
+                pushForce.y = 0;
+            if (event.key.keysym.sym == SDLK_DOWN)
+                pushForce.y = 0;
+            if (event.key.keysym.sym == SDLK_LEFT)
+                pushForce.x = 0;
+            if (event.key.keysym.sym == SDLK_RIGHT)
+                pushForce.x = 0;
             break;
         }
     }
@@ -58,6 +73,8 @@ void Application::Update()
     // that made changes to the screen
     int currentFrameTime = SDL_GetTicks();
     float deltaTime = (currentFrameTime - lastFrameTime) / 1000.0f;
+    if (deltaTime > 0.016) // for 60FPS each frame is at max 0.016s
+        deltaTime = 0.016;
 
     lastFrameTime = currentFrameTime;
 
@@ -67,22 +84,24 @@ void Application::Update()
         particle->AddForce(Vec2(2 * PIXELS_PER_METRE, 0));
         // Weight
         particle->AddForce(Vec2(0, particle->mass * 9.8f * PIXELS_PER_METRE));
+        // Push
+        particle->AddForce(pushForce);
         particle->Integrate(deltaTime);
 
         int minWidthBound = 0, minHeightBound = 0;
         int maxWidthBound = Graphics::Width(), maxHeightBound = Graphics::Height();
         if (particle->position.x - particle->radius < minWidthBound || particle->position.x + particle->radius > maxWidthBound)
         {
-            particle->velocity.x *= -1;
-            if (particle->position.x + particle->radius < minWidthBound)
+            particle->velocity.x *= -0.95;
+            if (particle->position.x - particle->radius < minWidthBound)
                 particle->position.x = particle->radius;
             else
                 particle->position.x = maxWidthBound - particle->radius;
         }
         if (particle->position.y - particle->radius < minHeightBound || particle->position.y + particle->radius > maxHeightBound)
         {
-            particle->velocity.y *= -1;
-            if (particle->position.y + particle->radius < minWidthBound)
+            particle->velocity.y *= -0.95;
+            if (particle->position.y - particle->radius < minWidthBound)
                 particle->position.y = particle->radius;
             else
                 particle->position.y = maxHeightBound - particle->radius;

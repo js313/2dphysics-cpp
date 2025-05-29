@@ -10,6 +10,7 @@ class Application
 private:
     bool running = false;
     std::vector<Particle *> particles;
+    Vec2 pushForce;
 
 public:
     Application() = default;

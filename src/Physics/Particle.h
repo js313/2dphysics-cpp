@@ -12,6 +12,7 @@ struct Particle
 
     float radius;
     float mass;
+    float invMass;
 
     Particle(float x, float y, float mass, float radius);
     ~Particle();
