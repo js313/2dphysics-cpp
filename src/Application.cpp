@@ -1,7 +1,6 @@
 #include "Application.h"
 #include "./Physics/Constants.h"
 #include "./Physics/Force.h"
-#include <iostream>
 
 bool Application::IsRunning()
 {
@@ -14,8 +13,9 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-    particles.push_back(new Particle(50, 100, 1.0, 4.0));
-    // particles.push_back(new Particle(100, 100, 3.0, 10.0));
+    particles.push_back(new Particle(Graphics::Width() / 2, 500, 1.0, 6.0));
+    // particles.push_back(new Particle(500, 500, 20.0, 20.0));
+    anchor = Vec2(Graphics::Width() / 2, 100);
 
     liquid.x = 0;
     liquid.y = Graphics::Height() / 2;
@@ -92,18 +92,29 @@ void Application::Update()
 
     lastFrameTime = currentFrameTime;
 
+    // Mutual Gravitation Force
+    // Vec2 gravitationForce = Force::GenerateGravitationForce(*particles[0], *particles[1], 1000.0, 5.0, 100.0);
+    // particles[0]->AddForce(gravitationForce);
+    // particles[1]->AddForce(-gravitationForce);
     for (Particle *particle : particles)
     {
         // Weight
         particle->AddForce(Vec2(0, particle->mass * 9.8f * PIXELS_PER_METRE));
         // Push
         particle->AddForce(pushForce);
-        if (particle->position.y > liquid.y)
-            // Drag
-            particle->AddForce(Force::GenerateDragForce(*particle, 0.01));
-        else
-            // Wind
-            particle->AddForce(Vec2(2 * PIXELS_PER_METRE, 0));
+        // if (particle->position.y > liquid.y)
+        //     // Drag
+        //     particle->AddForce(Force::GenerateDragForce(*particle, 0.01));
+        // else
+        //     // Wind
+        //     particle->AddForce(Vec2(2 * PIXELS_PER_METRE, 0));
+
+        // Friction
+        // particle->AddForce(Force::GenerateFrictionForce(*particle, 10.0));
+        // Drag
+        particle->AddForce(Force::GenerateDragForce(*particle, 0.001));
+        // Spring
+        particle->AddForce(Force::GenerateSpringForce(*particle, anchor, 300.0, 30.0));
         particle->Integrate(deltaTime);
 
         int minWidthBound = 0, minHeightBound = 0;
@@ -134,10 +145,12 @@ void Application::Render()
 {
     Graphics::ClearScreen(0xFF056263);
     // Graphics::DrawFillCircle(200, 200, 40, 0xFFFFFFFF);
-    Graphics::DrawFillRect(liquid.x + liquid.w / 2, liquid.y + liquid.h / 2, liquid.w, liquid.h, 0xFF6E3713);
+    Graphics::DrawLine(anchor.x, anchor.y, particles[0]->position.x, particles[0]->position.y, 0xFFFFFFFF);
+    Graphics::DrawFillCircle(anchor.x, anchor.y, 4.0, 0xFF0044FF);
+    // Graphics::DrawFillRect(liquid.x + liquid.w / 2, liquid.y + liquid.h / 2, liquid.w, liquid.h, 0xFF6E3713);
     for (Particle *particle : particles)
     {
-        Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->mass * 4, 0xFFFFFFFF);
+        Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFFFFFFFF);
     }
     Graphics::RenderFrame();
 }

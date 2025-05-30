@@ -14,6 +14,8 @@ private:
 
     SDL_Rect liquid;
 
+    Vec2 anchor;
+
 public:
     Application() = default;
     ~Application() = default;
