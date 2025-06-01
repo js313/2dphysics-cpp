@@ -13,14 +13,12 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-    particles.push_back(new Particle(Graphics::Width() / 2, 500, 1.0, 6.0));
-    // particles.push_back(new Particle(500, 500, 20.0, 20.0));
+    particles.push_back(new Particle(Graphics::Width() / 2, 120, 1.0, 6.0));
+    for (int i = 1; i < particleCount; i++)
+    {
+        particles.push_back(new Particle(Graphics::Width() / 2, particles[i - 1]->position.y + restLength, 1.0, 6.0));
+    }
     anchor = Vec2(Graphics::Width() / 2, 100);
-
-    liquid.x = 0;
-    liquid.y = Graphics::Height() / 2;
-    liquid.w = Graphics::Width();
-    liquid.h = Graphics::Height() / 2;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,8 +61,14 @@ void Application::Input()
             {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
-                particles.push_back(new Particle(x, y, 1.0, 5.0));
+                Vec2 d = Vec2(x, y) - particles[particleCount - 1]->position;
+                Vec2 pushDirection = d.UnitVector();
+                pushForce = pushDirection * d.Magnitude() * PIXELS_PER_METRE;
             }
+            break;
+        case SDL_MOUSEBUTTONUP:
+            if (event.button.button == SDL_BUTTON_LEFT)
+                pushForce = Vec2(0, 0);
             break;
         }
     }
@@ -92,29 +96,29 @@ void Application::Update()
 
     lastFrameTime = currentFrameTime;
 
-    // Mutual Gravitation Force
-    // Vec2 gravitationForce = Force::GenerateGravitationForce(*particles[0], *particles[1], 1000.0, 5.0, 100.0);
-    // particles[0]->AddForce(gravitationForce);
-    // particles[1]->AddForce(-gravitationForce);
+    particles[0]->AddForce(Force::GenerateSpringForce(*particles[0], anchor, restLength, k));
+    for (int i = 1; i < particleCount; i++)
+    {
+        Particle *prevParticle = particles[i - 1];
+        Particle *currParticle = particles[i];
+
+        // Spring
+        Vec2 springForce = Force::GenerateSpringForce(*currParticle, *prevParticle, restLength, k);
+        currParticle->AddForce(springForce);
+        prevParticle->AddForce(-springForce);
+
+        // Push
+        if (i == particleCount - 1)
+            currParticle->AddForce(pushForce);
+    }
+
     for (Particle *particle : particles)
     {
         // Weight
         particle->AddForce(Vec2(0, particle->mass * 9.8f * PIXELS_PER_METRE));
-        // Push
-        particle->AddForce(pushForce);
-        // if (particle->position.y > liquid.y)
-        //     // Drag
-        //     particle->AddForce(Force::GenerateDragForce(*particle, 0.01));
-        // else
-        //     // Wind
-        //     particle->AddForce(Vec2(2 * PIXELS_PER_METRE, 0));
-
-        // Friction
-        // particle->AddForce(Force::GenerateFrictionForce(*particle, 10.0));
         // Drag
         particle->AddForce(Force::GenerateDragForce(*particle, 0.001));
-        // Spring
-        particle->AddForce(Force::GenerateSpringForce(*particle, anchor, 300.0, 30.0));
+
         particle->Integrate(deltaTime);
 
         int minWidthBound = 0, minHeightBound = 0;
@@ -144,10 +148,16 @@ void Application::Update()
 void Application::Render()
 {
     Graphics::ClearScreen(0xFF056263);
-    // Graphics::DrawFillCircle(200, 200, 40, 0xFFFFFFFF);
     Graphics::DrawLine(anchor.x, anchor.y, particles[0]->position.x, particles[0]->position.y, 0xFFFFFFFF);
     Graphics::DrawFillCircle(anchor.x, anchor.y, 4.0, 0xFF0044FF);
-    // Graphics::DrawFillRect(liquid.x + liquid.w / 2, liquid.y + liquid.h / 2, liquid.w, liquid.h, 0xFF6E3713);
+
+    for (int i = 1; i < particleCount; i++)
+    {
+        Particle *prevParticle = particles[i - 1];
+        Particle *currParticle = particles[i];
+
+        Graphics::DrawLine(prevParticle->position.x, prevParticle->position.y, currParticle->position.x, currParticle->position.y, 0xFFFFFFFF);
+    }
     for (Particle *particle : particles)
     {
         Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFFFFFFFF);

@@ -12,9 +12,10 @@ private:
     std::vector<Particle *> particles;
     Vec2 pushForce;
 
-    SDL_Rect liquid;
-
     Vec2 anchor;
+    int particleCount = 15;
+    float k = 300;
+    float restLength = 20;
 
 public:
     Application() = default;
