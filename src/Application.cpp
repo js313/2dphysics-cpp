@@ -13,14 +13,10 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-    particles.push_back(new Particle(Graphics::Width() / 2, 500, 1.0, 6.0));
-    // particles.push_back(new Particle(500, 500, 20.0, 20.0));
-    anchor = Vec2(Graphics::Width() / 2, 100);
-
-    liquid.x = 0;
-    liquid.y = Graphics::Height() / 2;
-    liquid.w = Graphics::Width();
-    liquid.h = Graphics::Height() / 2;
+    particles.push_back(new Particle(100, 100, 1.0, 6.0));
+    particles.push_back(new Particle(200, 100, 1.0, 6.0));
+    particles.push_back(new Particle(200, 200, 1.0, 6.0));
+    particles.push_back(new Particle(100, 200, 1.0, 6.0));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -92,29 +88,26 @@ void Application::Update()
 
     lastFrameTime = currentFrameTime;
 
-    // Mutual Gravitation Force
-    // Vec2 gravitationForce = Force::GenerateGravitationForce(*particles[0], *particles[1], 1000.0, 5.0, 100.0);
-    // particles[0]->AddForce(gravitationForce);
-    // particles[1]->AddForce(-gravitationForce);
+    // Spring
+    Vec2 forceAB = Force::GenerateSpringForce(*particles[0], *particles[1], 100, k);
+    Vec2 forceBC = Force::GenerateSpringForce(*particles[1], *particles[2], 100, k);
+    Vec2 forceCD = Force::GenerateSpringForce(*particles[2], *particles[3], 100, k);
+    Vec2 forceDA = Force::GenerateSpringForce(*particles[3], *particles[0], 100, k);
+    Vec2 forceAC = Force::GenerateSpringForce(*particles[0], *particles[2], 141, k);
+    Vec2 forceBD = Force::GenerateSpringForce(*particles[1], *particles[3], 141, k);
+    particles[0]->AddForce(forceAB - forceDA + forceAC);
+    particles[1]->AddForce(-forceAB + forceBC + forceBD);
+    particles[2]->AddForce(-forceBC - forceAC + forceCD);
+    particles[3]->AddForce(forceDA - forceBD - forceCD);
+
     for (Particle *particle : particles)
     {
         // Weight
         particle->AddForce(Vec2(0, particle->mass * 9.8f * PIXELS_PER_METRE));
+        // Drag
+        particle->AddForce(Force::GenerateDragForce(*particle, 0.003));
         // Push
         particle->AddForce(pushForce);
-        // if (particle->position.y > liquid.y)
-        //     // Drag
-        //     particle->AddForce(Force::GenerateDragForce(*particle, 0.01));
-        // else
-        //     // Wind
-        //     particle->AddForce(Vec2(2 * PIXELS_PER_METRE, 0));
-
-        // Friction
-        // particle->AddForce(Force::GenerateFrictionForce(*particle, 10.0));
-        // Drag
-        particle->AddForce(Force::GenerateDragForce(*particle, 0.001));
-        // Spring
-        particle->AddForce(Force::GenerateSpringForce(*particle, anchor, 300.0, 30.0));
         particle->Integrate(deltaTime);
 
         int minWidthBound = 0, minHeightBound = 0;
@@ -145,9 +138,13 @@ void Application::Render()
 {
     Graphics::ClearScreen(0xFF056263);
     // Graphics::DrawFillCircle(200, 200, 40, 0xFFFFFFFF);
-    Graphics::DrawLine(anchor.x, anchor.y, particles[0]->position.x, particles[0]->position.y, 0xFFFFFFFF);
-    Graphics::DrawFillCircle(anchor.x, anchor.y, 4.0, 0xFF0044FF);
-    // Graphics::DrawFillRect(liquid.x + liquid.w / 2, liquid.y + liquid.h / 2, liquid.w, liquid.h, 0xFF6E3713);
+    Graphics::DrawLine(particles[0]->position.x, particles[0]->position.y, particles[1]->position.x, particles[1]->position.y, 0xFFFFFFFF);
+    Graphics::DrawLine(particles[1]->position.x, particles[1]->position.y, particles[2]->position.x, particles[2]->position.y, 0xFFFFFFFF);
+    Graphics::DrawLine(particles[2]->position.x, particles[2]->position.y, particles[3]->position.x, particles[3]->position.y, 0xFFFFFFFF);
+    Graphics::DrawLine(particles[3]->position.x, particles[3]->position.y, particles[0]->position.x, particles[0]->position.y, 0xFFFFFFFF);
+    Graphics::DrawLine(particles[0]->position.x, particles[0]->position.y, particles[2]->position.x, particles[2]->position.y, 0xFFFFFFFF);
+    Graphics::DrawLine(particles[1]->position.x, particles[1]->position.y, particles[3]->position.x, particles[3]->position.y, 0xFFFFFFFF);
+
     for (Particle *particle : particles)
     {
         Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFFFFFFFF);
