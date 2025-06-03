@@ -13,8 +13,8 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-    particles.push_back(new Particle(Graphics::Width() / 2, 500, 1.0, 6.0));
-    // particles.push_back(new Particle(500, 500, 20.0, 20.0));
+    bodies.push_back(new Body(new CircleShape(6.0), Graphics::Width() / 2, 500, 1.0, 6.0));
+    // bodies.push_back(new Body(new CircleShape(20.0), 500, 500, 20.0, 20.0));
     anchor = Vec2(Graphics::Width() / 2, 100);
 
     liquid.x = 0;
@@ -63,7 +63,7 @@ void Application::Input()
             {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
-                particles.push_back(new Particle(x, y, 1.0, 5.0));
+                bodies.push_back(new Body(new CircleShape(5.0), x, y, 1.0, 5.0));
             }
             break;
         }
@@ -93,47 +93,47 @@ void Application::Update()
     lastFrameTime = currentFrameTime;
 
     // Mutual Gravitation Force
-    // Vec2 gravitationForce = Force::GenerateGravitationForce(*particles[0], *particles[1], 1000.0, 5.0, 100.0);
-    // particles[0]->AddForce(gravitationForce);
-    // particles[1]->AddForce(-gravitationForce);
-    for (Particle *particle : particles)
+    // Vec2 gravitationForce = Force::GenerateGravitationForce(*bodies[0], *bodies[1], 1000.0, 5.0, 100.0);
+    // bodies[0]->AddForce(gravitationForce);
+    // bodies[1]->AddForce(-gravitationForce);
+    for (Body *body : bodies)
     {
         // Weight
-        particle->AddForce(Vec2(0, particle->mass * 9.8f * PIXELS_PER_METRE));
+        body->AddForce(Vec2(0, body->mass * 9.8f * PIXELS_PER_METRE));
         // Push
-        particle->AddForce(pushForce);
-        // if (particle->position.y > liquid.y)
+        body->AddForce(pushForce);
+        // if (body->position.y > liquid.y)
         //     // Drag
-        //     particle->AddForce(Force::GenerateDragForce(*particle, 0.01));
+        //     body->AddForce(Force::GenerateDragForce(*body, 0.01));
         // else
         //     // Wind
-        //     particle->AddForce(Vec2(2 * PIXELS_PER_METRE, 0));
+        //     body->AddForce(Vec2(2 * PIXELS_PER_METRE, 0));
 
         // Friction
-        // particle->AddForce(Force::GenerateFrictionForce(*particle, 10.0));
+        // body->AddForce(Force::GenerateFrictionForce(*body, 10.0));
         // Drag
-        particle->AddForce(Force::GenerateDragForce(*particle, 0.001));
+        body->AddForce(Force::GenerateDragForce(*body, 0.001));
         // Spring
-        particle->AddForce(Force::GenerateSpringForce(*particle, anchor, 300.0, 30.0));
-        particle->Integrate(deltaTime);
+        body->AddForce(Force::GenerateSpringForce(*body, anchor, 300.0, 30.0));
+        body->Integrate(deltaTime);
 
         int minWidthBound = 0, minHeightBound = 0;
         int maxWidthBound = Graphics::Width(), maxHeightBound = Graphics::Height();
-        if (particle->position.x - particle->radius < minWidthBound || particle->position.x + particle->radius > maxWidthBound)
+        if (body->position.x - body->radius < minWidthBound || body->position.x + body->radius > maxWidthBound)
         {
-            particle->velocity.x *= -0.95;
-            if (particle->position.x - particle->radius < minWidthBound)
-                particle->position.x = particle->radius;
+            body->velocity.x *= -0.95;
+            if (body->position.x - body->radius < minWidthBound)
+                body->position.x = body->radius;
             else
-                particle->position.x = maxWidthBound - particle->radius;
+                body->position.x = maxWidthBound - body->radius;
         }
-        if (particle->position.y - particle->radius < minHeightBound || particle->position.y + particle->radius > maxHeightBound)
+        if (body->position.y - body->radius < minHeightBound || body->position.y + body->radius > maxHeightBound)
         {
-            particle->velocity.y *= -0.95;
-            if (particle->position.y - particle->radius < minWidthBound)
-                particle->position.y = particle->radius;
+            body->velocity.y *= -0.95;
+            if (body->position.y - body->radius < minWidthBound)
+                body->position.y = body->radius;
             else
-                particle->position.y = maxHeightBound - particle->radius;
+                body->position.y = maxHeightBound - body->radius;
         }
     }
 }
@@ -145,12 +145,12 @@ void Application::Render()
 {
     Graphics::ClearScreen(0xFF056263);
     // Graphics::DrawFillCircle(200, 200, 40, 0xFFFFFFFF);
-    Graphics::DrawLine(anchor.x, anchor.y, particles[0]->position.x, particles[0]->position.y, 0xFFFFFFFF);
+    Graphics::DrawLine(anchor.x, anchor.y, bodies[0]->position.x, bodies[0]->position.y, 0xFFFFFFFF);
     Graphics::DrawFillCircle(anchor.x, anchor.y, 4.0, 0xFF0044FF);
     // Graphics::DrawFillRect(liquid.x + liquid.w / 2, liquid.y + liquid.h / 2, liquid.w, liquid.h, 0xFF6E3713);
-    for (Particle *particle : particles)
+    for (Body *body : bodies)
     {
-        Graphics::DrawFillCircle(particle->position.x, particle->position.y, particle->radius, 0xFFFFFFFF);
+        Graphics::DrawFillCircle(body->position.x, body->position.y, body->radius, 0xFFFFFFFF);
     }
     Graphics::RenderFrame();
 }
@@ -160,9 +160,9 @@ void Application::Render()
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Destroy()
 {
-    for (Particle *particle : particles)
+    for (Body *body : bodies)
     {
-        delete particle;
+        delete body;
     }
 
     Graphics::CloseWindow();

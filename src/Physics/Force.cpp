@@ -2,26 +2,26 @@
 #include "./Constants.h"
 #include <algorithm>
 
-Vec2 Force::GenerateDragForce(const Particle &particle, float k)
+Vec2 Force::GenerateDragForce(const Body &body, float k)
 {
-    if (particle.velocity.MagnitudeSquared() == 0.0)
+    if (body.velocity.MagnitudeSquared() == 0.0)
         return Vec2(0, 0);
 
-    Vec2 dragDirection = particle.velocity.UnitVector() * -1;
-    float dragMagnitude = k * particle.velocity.MagnitudeSquared();
+    Vec2 dragDirection = body.velocity.UnitVector() * -1;
+    float dragMagnitude = k * body.velocity.MagnitudeSquared();
 
     return dragDirection * dragMagnitude;
 }
 
-Vec2 Force::GenerateFrictionForce(const Particle &particle, float k)
+Vec2 Force::GenerateFrictionForce(const Body &body, float k)
 {
-    Vec2 frictionDirection = particle.velocity.UnitVector() * -1;
+    Vec2 frictionDirection = body.velocity.UnitVector() * -1;
     float frictionMagnitude = k;
 
     return frictionDirection * frictionMagnitude;
 }
 
-Vec2 Force::GenerateGravitationForce(const Particle &a, const Particle &b, float G, float minDistance, float maxDistance)
+Vec2 Force::GenerateGravitationForce(const Body &a, const Body &b, float G, float minDistance, float maxDistance)
 {
     Vec2 d = b.position - a.position; // from a->b
 
@@ -32,9 +32,9 @@ Vec2 Force::GenerateGravitationForce(const Particle &a, const Particle &b, float
     return attractionDirection * attractionMagnitude;
 }
 
-Vec2 Force::GenerateSpringForce(const Particle &particle, const Vec2 &anchor, float restLength, float k)
+Vec2 Force::GenerateSpringForce(const Body &body, const Vec2 &anchor, float restLength, float k)
 {
-    Vec2 d = particle.position - anchor;
+    Vec2 d = body.position - anchor;
     float displacement = d.Magnitude() - restLength;
 
     Vec2 springDirection = d.UnitVector();
@@ -42,7 +42,7 @@ Vec2 Force::GenerateSpringForce(const Particle &particle, const Vec2 &anchor, fl
     return springDirection * springMagnitude;
 }
 
-Vec2 Force::GenerateSpringForce(const Particle &a, const Particle &b, float restLength, float k)
+Vec2 Force::GenerateSpringForce(const Body &a, const Body &b, float restLength, float k)
 {
     Vec2 d = a.position - b.position;
     float displacement = d.Magnitude() - restLength;

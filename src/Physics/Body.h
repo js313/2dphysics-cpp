@@ -1,9 +1,10 @@
-#ifndef PARTICLE_H
-#define PARTICLE_H
+#ifndef BODY_H
+#define BODY_H
 
 #include "Vec2.h"
+#include "Shape.h"
 
-struct Particle
+struct Body
 {
     Vec2 position;
     Vec2 velocity;
@@ -14,8 +15,10 @@ struct Particle
     float mass;
     float invMass;
 
-    Particle(float x, float y, float mass, float radius);
-    ~Particle();
+    Shape *shape;
+
+    Body(Shape *shape, float x, float y, float mass, float radius);
+    ~Body();
 
     void Integrate(float dt);
     void AddForce(const Vec2 &force);

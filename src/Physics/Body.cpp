@@ -1,8 +1,9 @@
 #include <iostream>
-#include "Particle.h"
+#include "Body.h"
 
-Particle::Particle(float x, float y, float mass, float radius)
+Body::Body(Shape *shape, float x, float y, float mass, float radius)
 {
+    this->shape = shape;
     this->position = Vec2(x, y);
     this->mass = mass;
     if (mass == 0.0)
@@ -10,15 +11,16 @@ Particle::Particle(float x, float y, float mass, float radius)
     else
         this->invMass = 1.0 / mass;
     this->radius = radius;
-    std::cout << "Particle constructor called!\n";
+    std::cout << "Body constructor called!\n";
 }
 
-Particle::~Particle()
+Body::~Body()
 {
-    std::cout << "Particle destructor called!\n";
+    delete shape;
+    std::cout << "Body destructor called!\n";
 }
 
-void Particle::Integrate(float dt)
+void Body::Integrate(float dt)
 {
     // Find acceleration based on net of all forces applied
     acceleration = sumForces * invMass;
@@ -31,12 +33,12 @@ void Particle::Integrate(float dt)
     ClearForces();
 }
 
-void Particle::AddForce(const Vec2 &force)
+void Body::AddForce(const Vec2 &force)
 {
     sumForces += force;
 }
 
-void Particle::ClearForces()
+void Body::ClearForces()
 {
     sumForces *= 0;
 }
