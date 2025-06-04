@@ -13,8 +13,8 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-    bodies.push_back(new Body(new CircleShape(6.0), Graphics::Width() / 2, 500, 1.0, 6.0));
-    // bodies.push_back(new Body(new CircleShape(20.0), 500, 500, 20.0, 20.0));
+    bodies.push_back(new Body(new CircleShape(60.0), Graphics::Width() / 2, 500, 1.0));
+    // bodies.push_back(new Body(new CircleShape(20.0), 500, 500, 20.0));
     anchor = Vec2(Graphics::Width() / 2, 100);
 
     liquid.x = 0;
@@ -63,7 +63,7 @@ void Application::Input()
             {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
-                bodies.push_back(new Body(new CircleShape(5.0), x, y, 1.0, 5.0));
+                bodies.push_back(new Body(new CircleShape(5.0), x, y, 1.0));
             }
             break;
         }
@@ -119,21 +119,26 @@ void Application::Update()
 
         int minWidthBound = 0, minHeightBound = 0;
         int maxWidthBound = Graphics::Width(), maxHeightBound = Graphics::Height();
-        if (body->position.x - body->radius < minWidthBound || body->position.x + body->radius > maxWidthBound)
+
+        if (body->shape->GetType() == CIRCLE) // Need this as type casting shape to circleShape inside
         {
-            body->velocity.x *= -0.95;
-            if (body->position.x - body->radius < minWidthBound)
-                body->position.x = body->radius;
-            else
-                body->position.x = maxWidthBound - body->radius;
-        }
-        if (body->position.y - body->radius < minHeightBound || body->position.y + body->radius > maxHeightBound)
-        {
-            body->velocity.y *= -0.95;
-            if (body->position.y - body->radius < minWidthBound)
-                body->position.y = body->radius;
-            else
-                body->position.y = maxHeightBound - body->radius;
+            CircleShape *circleShape = (CircleShape *)body->shape;
+            if (body->position.x - circleShape->radius < minWidthBound || body->position.x + circleShape->radius > maxWidthBound)
+            {
+                body->velocity.x *= -0.95;
+                if (body->position.x - circleShape->radius < minWidthBound)
+                    body->position.x = circleShape->radius;
+                else
+                    body->position.x = maxWidthBound - circleShape->radius;
+            }
+            if (body->position.y - circleShape->radius < minHeightBound || body->position.y + circleShape->radius > maxHeightBound)
+            {
+                body->velocity.y *= -0.95;
+                if (body->position.y - circleShape->radius < minWidthBound)
+                    body->position.y = circleShape->radius;
+                else
+                    body->position.y = maxHeightBound - circleShape->radius;
+            }
         }
     }
 }
@@ -150,7 +155,11 @@ void Application::Render()
     // Graphics::DrawFillRect(liquid.x + liquid.w / 2, liquid.y + liquid.h / 2, liquid.w, liquid.h, 0xFF6E3713);
     for (Body *body : bodies)
     {
-        Graphics::DrawFillCircle(body->position.x, body->position.y, body->radius, 0xFFFFFFFF);
+        if (body->shape->GetType() == CIRCLE)
+        {
+            CircleShape *circleShape = (CircleShape *)body->shape;
+            Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, 0.0, 0xFFFFFFFF);
+        }
     }
     Graphics::RenderFrame();
 }

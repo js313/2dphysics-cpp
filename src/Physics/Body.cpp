@@ -1,7 +1,7 @@
 #include <iostream>
 #include "Body.h"
 
-Body::Body(Shape *shape, float x, float y, float mass, float radius)
+Body::Body(Shape *shape, float x, float y, float mass)
 {
     this->shape = shape;
     this->position = Vec2(x, y);
@@ -10,7 +10,6 @@ Body::Body(Shape *shape, float x, float y, float mass, float radius)
         this->invMass = 0.0;
     else
         this->invMass = 1.0 / mass;
-    this->radius = radius;
     std::cout << "Body constructor called!\n";
 }
 

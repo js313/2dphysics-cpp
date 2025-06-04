@@ -11,13 +11,12 @@ struct Body
     Vec2 acceleration;
     Vec2 sumForces;
 
-    float radius;
     float mass;
     float invMass;
 
     Shape *shape;
 
-    Body(Shape *shape, float x, float y, float mass, float radius);
+    Body(Shape *shape, float x, float y, float mass);
     ~Body();
 
     void Integrate(float dt);
