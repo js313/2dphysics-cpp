@@ -12,9 +12,9 @@ private:
     std::vector<Body *> bodies;
     Vec2 pushForce;
 
-    SDL_Rect liquid;
+    // SDL_Rect liquid;
 
-    Vec2 anchor;
+    // Vec2 anchor;
 
 public:
     Application() = default;

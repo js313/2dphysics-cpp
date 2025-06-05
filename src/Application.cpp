@@ -14,13 +14,6 @@ void Application::Setup()
 {
     running = Graphics::OpenWindow();
     bodies.push_back(new Body(new CircleShape(60.0), Graphics::Width() / 2, 500, 1.0));
-    // bodies.push_back(new Body(new CircleShape(20.0), 500, 500, 20.0));
-    anchor = Vec2(Graphics::Width() / 2, 100);
-
-    liquid.x = 0;
-    liquid.y = Graphics::Height() / 2;
-    liquid.w = Graphics::Width();
-    liquid.h = Graphics::Height() / 2;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -112,10 +105,12 @@ void Application::Update()
         // Friction
         // body->AddForce(Force::GenerateFrictionForce(*body, 10.0));
         // Drag
-        body->AddForce(Force::GenerateDragForce(*body, 0.001));
-        // Spring
-        body->AddForce(Force::GenerateSpringForce(*body, anchor, 300.0, 30.0));
-        body->Integrate(deltaTime);
+        body->AddForce(Force::GenerateDragForce(*body, 0.003));
+        body->AddTorque(20.0);
+        // // Spring
+        // body->AddForce(Force::GenerateSpringForce(*body, anchor, 300.0, 30.0));
+        body->IntegrateLinear(deltaTime);
+        body->IntegrateAngular(deltaTime);
 
         int minWidthBound = 0, minHeightBound = 0;
         int maxWidthBound = Graphics::Width(), maxHeightBound = Graphics::Height();
@@ -125,7 +120,7 @@ void Application::Update()
             CircleShape *circleShape = (CircleShape *)body->shape;
             if (body->position.x - circleShape->radius < minWidthBound || body->position.x + circleShape->radius > maxWidthBound)
             {
-                body->velocity.x *= -0.95;
+                body->velocity.x *= -1.0;
                 if (body->position.x - circleShape->radius < minWidthBound)
                     body->position.x = circleShape->radius;
                 else
@@ -133,7 +128,7 @@ void Application::Update()
             }
             if (body->position.y - circleShape->radius < minHeightBound || body->position.y + circleShape->radius > maxHeightBound)
             {
-                body->velocity.y *= -0.95;
+                body->velocity.y *= -1.0;
                 if (body->position.y - circleShape->radius < minWidthBound)
                     body->position.y = circleShape->radius;
                 else
@@ -149,16 +144,12 @@ void Application::Update()
 void Application::Render()
 {
     Graphics::ClearScreen(0xFF056263);
-    // Graphics::DrawFillCircle(200, 200, 40, 0xFFFFFFFF);
-    Graphics::DrawLine(anchor.x, anchor.y, bodies[0]->position.x, bodies[0]->position.y, 0xFFFFFFFF);
-    Graphics::DrawFillCircle(anchor.x, anchor.y, 4.0, 0xFF0044FF);
-    // Graphics::DrawFillRect(liquid.x + liquid.w / 2, liquid.y + liquid.h / 2, liquid.w, liquid.h, 0xFF6E3713);
     for (Body *body : bodies)
     {
         if (body->shape->GetType() == CIRCLE)
         {
             CircleShape *circleShape = (CircleShape *)body->shape;
-            Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, 0.0, 0xFFFFFFFF);
+            Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, 0xFFFFFFFF);
         }
     }
     Graphics::RenderFrame();

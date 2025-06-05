@@ -16,6 +16,7 @@ struct Shape // abstract struct, as there is one(or more) pure virtual function
     virtual ~Shape() = default;
     // this is a pure virtual function
     virtual ShapeType GetType() const = 0; // "const" means The object this is called on, it's properties won't be modified
+    virtual float GetMoIPerUnitMass() const = 0;
 };
 
 struct CircleShape : public Shape
@@ -25,6 +26,7 @@ struct CircleShape : public Shape
     CircleShape(float radius);
     virtual ~CircleShape();
     ShapeType GetType() const override;
+    float GetMoIPerUnitMass() const override;
 };
 
 struct PolygonShape : public Shape
@@ -34,6 +36,7 @@ struct PolygonShape : public Shape
     PolygonShape(const std::vector<Vec2> vertices);
     virtual ~PolygonShape();
     ShapeType GetType() const override;
+    float GetMoIPerUnitMass() const override;
 };
 
 struct BoxShape : public PolygonShape
@@ -44,6 +47,7 @@ struct BoxShape : public PolygonShape
     BoxShape(float width, float height);
     virtual ~BoxShape();
     ShapeType GetType() const override; // Won't work if the parent class uses the final keyword while overriding
+    float GetMoIPerUnitMass() const override;
 };
 
 #endif

@@ -17,6 +17,11 @@ ShapeType CircleShape::GetType() const
     return CIRCLE;
 }
 
+float CircleShape::GetMoIPerUnitMass() const
+{
+    return 0.5 * this->radius * this->radius;
+}
+
 PolygonShape::PolygonShape(const std::vector<Vec2> vertices)
 {
     this->vertices = vertices;
@@ -31,6 +36,11 @@ PolygonShape::~PolygonShape()
 ShapeType PolygonShape::GetType() const
 {
     return POLYGON;
+}
+
+float PolygonShape::GetMoIPerUnitMass() const
+{
+    return 0.0;
 }
 
 BoxShape::BoxShape(float width, float height) : PolygonShape({})
@@ -48,4 +58,9 @@ BoxShape::~BoxShape()
 ShapeType BoxShape::GetType() const
 {
     return BOX;
+}
+
+float BoxShape::GetMoIPerUnitMass() const
+{
+    return (1 / 12.0) * this->width * this->height;
 }
