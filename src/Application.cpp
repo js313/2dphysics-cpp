@@ -13,7 +13,7 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-    bodies.push_back(new Body(new CircleShape(60.0), Graphics::Width() / 2, 500, 1.0));
+    bodies.push_back(new Body(new BoxShape(200, 100), Graphics::Width() / 2, 500, 1.0));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -92,9 +92,9 @@ void Application::Update()
     for (Body *body : bodies)
     {
         // Weight
-        body->AddForce(Vec2(0, body->mass * 9.8f * PIXELS_PER_METRE));
+        // body->AddForce(Vec2(0, body->mass * 9.8f * PIXELS_PER_METRE));
         // Push
-        body->AddForce(pushForce);
+        // body->AddForce(pushForce);
         // if (body->position.y > liquid.y)
         //     // Drag
         //     body->AddForce(Force::GenerateDragForce(*body, 0.01));
@@ -105,12 +105,12 @@ void Application::Update()
         // Friction
         // body->AddForce(Force::GenerateFrictionForce(*body, 10.0));
         // Drag
-        body->AddForce(Force::GenerateDragForce(*body, 0.003));
-        body->AddTorque(20.0);
-        // // Spring
+        // body->AddForce(Force::GenerateDragForce(*body, 0.003));
+        // Torque
+        body->AddTorque(200.0);
+        // Spring
         // body->AddForce(Force::GenerateSpringForce(*body, anchor, 300.0, 30.0));
-        body->IntegrateLinear(deltaTime);
-        body->IntegrateAngular(deltaTime);
+        body->Update(deltaTime);
 
         int minWidthBound = 0, minHeightBound = 0;
         int maxWidthBound = Graphics::Width(), maxHeightBound = Graphics::Height();
@@ -150,6 +150,11 @@ void Application::Render()
         {
             CircleShape *circleShape = (CircleShape *)body->shape;
             Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, 0xFFFFFFFF);
+        }
+        else if (body->shape->GetType() == BOX)
+        {
+            BoxShape *boxShape = (BoxShape *)body->shape;
+            Graphics::DrawPolygon(body->position.x, body->position.y, boxShape->globalVertices, 0xFFFFFFFF);
         }
     }
     Graphics::RenderFrame();

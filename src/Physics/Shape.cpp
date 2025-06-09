@@ -24,7 +24,7 @@ float CircleShape::GetMoIPerUnitMass() const
 
 PolygonShape::PolygonShape(const std::vector<Vec2> vertices)
 {
-    this->vertices = vertices;
+    this->localVertices = vertices;
     std::cout << "PolygonShape constructor called!\n";
 }
 
@@ -47,7 +47,27 @@ BoxShape::BoxShape(float width, float height) : PolygonShape({})
 {
     this->width = width;
     this->height = height;
+    // Load vertices based on local space(considering (0,0) as origin)
+    this->localVertices.push_back(Vec2(-this->width / 2.0, -this->height / 2.0));
+    this->localVertices.push_back(Vec2(+this->width / 2.0, -this->height / 2.0));
+    this->localVertices.push_back(Vec2(+this->width / 2.0, +this->height / 2.0));
+    this->localVertices.push_back(Vec2(-this->width / 2.0, +this->height / 2.0));
+
+    this->globalVertices.push_back(Vec2(-this->width / 2.0, -this->height / 2.0));
+    this->globalVertices.push_back(Vec2(+this->width / 2.0, -this->height / 2.0));
+    this->globalVertices.push_back(Vec2(+this->width / 2.0, +this->height / 2.0));
+    this->globalVertices.push_back(Vec2(-this->width / 2.0, +this->height / 2.0));
     std::cout << "BoxShape constructor called!\n";
+}
+
+void PolygonShape::UpdateVertices(float rotation, const Vec2 &position)
+{
+    for (int i = 0; i < localVertices.size(); i++)
+    {
+        // First rotation, then translation(as rotaion works only if about origin)
+        globalVertices[i] = localVertices[i].Rotate(rotation);
+        globalVertices[i] += position;
+    }
 }
 
 BoxShape::~BoxShape()

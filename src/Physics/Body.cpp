@@ -58,6 +58,16 @@ void Body::IntegrateAngular(float dt)
     ClearTorques();
 }
 
+void Body::Update(float dt)
+{
+    IntegrateLinear(dt);
+    IntegrateAngular(dt);
+    if (shape->GetType() == POLYGON || shape->GetType() == BOX)
+    {
+        ((PolygonShape *)shape)->UpdateVertices(rotation, position);
+    }
+}
+
 void Body::AddForce(const Vec2 &force)
 {
     sumForces += force;

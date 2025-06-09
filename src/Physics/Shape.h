@@ -31,12 +31,14 @@ struct CircleShape : public Shape
 
 struct PolygonShape : public Shape
 {
-    std::vector<Vec2> vertices;
+    std::vector<Vec2> localVertices;
+    std::vector<Vec2> globalVertices;
 
     PolygonShape(const std::vector<Vec2> vertices);
     virtual ~PolygonShape();
     ShapeType GetType() const override;
     float GetMoIPerUnitMass() const override;
+    void UpdateVertices(float rotation, const Vec2 &position);
 };
 
 struct BoxShape : public PolygonShape

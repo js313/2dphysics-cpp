@@ -39,6 +39,8 @@ struct Body
 
     void ClearForces();
     void ClearTorques();
+
+    void Update(float dt);
 };
 
 #endif
