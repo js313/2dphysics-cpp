@@ -1,6 +1,7 @@
 #include "Application.h"
 #include "./Physics/Constants.h"
 #include "./Physics/Force.h"
+#include "./Physics/CollisionDetection.h"
 
 bool Application::IsRunning()
 {
@@ -13,7 +14,8 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-    bodies.push_back(new Body(new BoxShape(200, 100), Graphics::Width() / 2, 500, 1.0));
+    bodies.push_back(new Body(new CircleShape(200), Graphics::Width() / 2, 100, 1.0));
+    bodies.push_back(new Body(new CircleShape(100), Graphics::Width() / 2, 500, 1.0));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -92,22 +94,22 @@ void Application::Update()
     for (Body *body : bodies)
     {
         // Weight
-        // body->AddForce(Vec2(0, body->mass * 9.8f * PIXELS_PER_METRE));
+        body->AddForce(Vec2(0, body->mass * 9.8f * PIXELS_PER_METRE));
         // Push
         // body->AddForce(pushForce);
         // if (body->position.y > liquid.y)
         //     // Drag
         //     body->AddForce(Force::GenerateDragForce(*body, 0.01));
         // else
-        //     // Wind
-        //     body->AddForce(Vec2(2 * PIXELS_PER_METRE, 0));
+        // Wind
+        body->AddForce(Vec2(10 * PIXELS_PER_METRE, 0));
 
         // Friction
         // body->AddForce(Force::GenerateFrictionForce(*body, 10.0));
         // Drag
         // body->AddForce(Force::GenerateDragForce(*body, 0.003));
         // Torque
-        body->AddTorque(200.0);
+        // body->AddTorque(200.0);
         // Spring
         // body->AddForce(Force::GenerateSpringForce(*body, anchor, 300.0, 30.0));
         body->Update(deltaTime);
@@ -120,7 +122,7 @@ void Application::Update()
             CircleShape *circleShape = (CircleShape *)body->shape;
             if (body->position.x - circleShape->radius < minWidthBound || body->position.x + circleShape->radius > maxWidthBound)
             {
-                body->velocity.x *= -1.0;
+                body->velocity.x *= -0.9;
                 if (body->position.x - circleShape->radius < minWidthBound)
                     body->position.x = circleShape->radius;
                 else
@@ -128,11 +130,25 @@ void Application::Update()
             }
             if (body->position.y - circleShape->radius < minHeightBound || body->position.y + circleShape->radius > maxHeightBound)
             {
-                body->velocity.y *= -1.0;
+                body->velocity.y *= -0.9;
                 if (body->position.y - circleShape->radius < minWidthBound)
                     body->position.y = circleShape->radius;
                 else
                     body->position.y = maxHeightBound - circleShape->radius;
+            }
+        }
+    }
+    for (int i = 0; i < bodies.size(); i++)
+    {
+        for (int j = i + 1; j < bodies.size(); j++)
+        {
+            bodies[i]->isColliding = false;
+            bodies[j]->isColliding = false;
+
+            if (CollisionDetection::IsColliding(bodies[i], bodies[j]))
+            {
+                bodies[i]->isColliding = true;
+                bodies[j]->isColliding = true;
             }
         }
     }
@@ -146,15 +162,16 @@ void Application::Render()
     Graphics::ClearScreen(0xFF056263);
     for (Body *body : bodies)
     {
+        Uint32 color = body->isColliding ? 0xFF0000FF : 0xFFFFFFFF;
         if (body->shape->GetType() == CIRCLE)
         {
             CircleShape *circleShape = (CircleShape *)body->shape;
-            Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, 0xFFFFFFFF);
+            Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, color);
         }
         else if (body->shape->GetType() == BOX)
         {
             BoxShape *boxShape = (BoxShape *)body->shape;
-            Graphics::DrawPolygon(body->position.x, body->position.y, boxShape->globalVertices, 0xFFFFFFFF);
+            Graphics::DrawPolygon(body->position.x, body->position.y, boxShape->globalVertices, color);
         }
     }
     Graphics::RenderFrame();
