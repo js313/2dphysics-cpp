@@ -14,8 +14,8 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-    bodies.push_back(new Body(new CircleShape(200), Graphics::Width() / 2, 100, 1.0));
-    bodies.push_back(new Body(new CircleShape(100), Graphics::Width() / 2, 500, 1.0));
+    bodies.push_back(new Body(new CircleShape(50), Graphics::Width() / 2, 100, 1.0));
+    bodies.push_back(new Body(new CircleShape(25), Graphics::Width() / 2, 500, 1.0));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,6 +61,12 @@ void Application::Input()
                 bodies.push_back(new Body(new CircleShape(5.0), x, y, 1.0));
             }
             break;
+        case SDL_MOUSEMOTION:
+            int x = 0, y = 0;
+            SDL_GetMouseState(&x, &y);
+            bodies[0]->position.x = x;
+            bodies[0]->position.y = y;
+            break;
         }
     }
 }
@@ -94,7 +100,7 @@ void Application::Update()
     for (Body *body : bodies)
     {
         // Weight
-        body->AddForce(Vec2(0, body->mass * 9.8f * PIXELS_PER_METRE));
+        // body->AddForce(Vec2(0, body->mass * 9.8f * PIXELS_PER_METRE));
         // Push
         // body->AddForce(pushForce);
         // if (body->position.y > liquid.y)
@@ -102,8 +108,7 @@ void Application::Update()
         //     body->AddForce(Force::GenerateDragForce(*body, 0.01));
         // else
         // Wind
-        body->AddForce(Vec2(10 * PIXELS_PER_METRE, 0));
-
+        // body->AddForce(Vec2(10 * PIXELS_PER_METRE, 0));
         // Friction
         // body->AddForce(Force::GenerateFrictionForce(*body, 10.0));
         // Drag
@@ -112,6 +117,10 @@ void Application::Update()
         // body->AddTorque(200.0);
         // Spring
         // body->AddForce(Force::GenerateSpringForce(*body, anchor, 300.0, 30.0));
+
+        // BAD, BAD, VERY BAD!!!
+        Graphics::ClearScreen(0xFF056263);
+
         body->Update(deltaTime);
 
         int minWidthBound = 0, minHeightBound = 0;
@@ -144,11 +153,16 @@ void Application::Update()
         {
             bodies[i]->isColliding = false;
             bodies[j]->isColliding = false;
+            Contact contact;
 
-            if (CollisionDetection::IsColliding(bodies[i], bodies[j]))
+            if (CollisionDetection::IsColliding(bodies[i], bodies[j], contact))
             {
                 bodies[i]->isColliding = true;
                 bodies[j]->isColliding = true;
+
+                Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFFF00FF);
+                Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFFF00FF);
+                Graphics::DrawLine(contact.a->position.x, contact.a->position.y, contact.a->position.x + contact.normal.x * 15, contact.a->position.y + contact.normal.y * 15, 0xFFFF00FF);
             }
         }
     }
@@ -159,7 +173,7 @@ void Application::Update()
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Render()
 {
-    Graphics::ClearScreen(0xFF056263);
+    // Graphics::ClearScreen(0xFF056263);
     for (Body *body : bodies)
     {
         Uint32 color = body->isColliding ? 0xFF0000FF : 0xFFFFFFFF;
