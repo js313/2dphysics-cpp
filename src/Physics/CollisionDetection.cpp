@@ -1,6 +1,6 @@
 #include "./CollisionDetection.h"
 
-bool CollisionDetection::IsColliding(const Body *const a, const Body *const b, Contact &contact)
+bool CollisionDetection::IsColliding(Body *const a, Body *const b, Contact &contact)
 {
     Shape *shapeA = a->shape;
     Shape *shapeB = b->shape;
@@ -12,7 +12,7 @@ bool CollisionDetection::IsColliding(const Body *const a, const Body *const b, C
     return false;
 }
 
-bool CollisionDetection::IsCollidingCircleCircle(const Body *const a, const Body *const b, Contact &contact)
+bool CollisionDetection::IsCollidingCircleCircle(Body *const a, Body *const b, Contact &contact)
 {
     Shape *shapeA = a->shape;
     Shape *shapeB = b->shape;

@@ -7,9 +7,9 @@
 
 struct CollisionDetection
 {
-    static bool IsColliding(const Body *const a, const Body *const b, Contact &contact);
+    static bool IsColliding(Body *const a, Body *const b, Contact &contact);
 
-    static bool IsCollidingCircleCircle(const Body *const a, const Body *const b, Contact &contact);
+    static bool IsCollidingCircleCircle(Body *const a, Body *const b, Contact &contact);
 
     // TODO:
     // static void IsCollidingCirclePolygon(Body *a, Body *b);

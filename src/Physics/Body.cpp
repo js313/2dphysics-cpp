@@ -34,6 +34,9 @@ Body::~Body()
 
 void Body::IntegrateLinear(float dt)
 {
+    if (IsStatic())
+        return;
+
     // Find acceleration based on net of all forces applied
     acceleration = sumForces * invMass;
 
@@ -47,6 +50,9 @@ void Body::IntegrateLinear(float dt)
 
 void Body::IntegrateAngular(float dt)
 {
+    if (IsStatic())
+        return;
+
     // Find angular acceleration based on net of all forces applied
     angularAcceleration = sumTorques * invI;
 
@@ -86,4 +92,10 @@ void Body::ClearForces()
 void Body::ClearTorques()
 {
     sumTorques *= 0;
+}
+
+bool Body::IsStatic()
+{
+    float epsilon = 0.005f;
+    return fabs(invMass - 0.0f) < epsilon;
 }

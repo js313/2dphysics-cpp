@@ -159,6 +159,7 @@ void Application::Update()
             {
                 bodies[i]->isColliding = true;
                 bodies[j]->isColliding = true;
+                contact.ResolvePenetration();
 
                 Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFFF00FF);
                 Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFFF00FF);

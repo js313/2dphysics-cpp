@@ -43,6 +43,8 @@ struct Body
     void ClearTorques();
 
     void Update(float dt);
+
+    bool IsStatic();
 };
 
 #endif
