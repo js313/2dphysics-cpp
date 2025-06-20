@@ -14,8 +14,8 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-    bodies.push_back(new Body(new CircleShape(50), Graphics::Width() / 2, 100, 1.0));
-    bodies.push_back(new Body(new CircleShape(25), Graphics::Width() / 2, 500, 1.0));
+    bodies.push_back(new Body(new CircleShape(10), Graphics::Width() / 2, 100, 1.0));
+    bodies.push_back(new Body(new CircleShape(50), Graphics::Width() / 2, 500, 0.0));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -58,14 +58,14 @@ void Application::Input()
             {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
-                bodies.push_back(new Body(new CircleShape(5.0), x, y, 1.0));
+                bodies.push_back(new Body(new CircleShape(50.0), x, y, 5.0));
             }
             break;
         case SDL_MOUSEMOTION:
             int x = 0, y = 0;
             SDL_GetMouseState(&x, &y);
-            bodies[0]->position.x = x;
-            bodies[0]->position.y = y;
+            // bodies[0]->position.x = x;
+            // bodies[0]->position.y = y;
             break;
         }
     }
@@ -100,12 +100,12 @@ void Application::Update()
     for (Body *body : bodies)
     {
         // Weight
-        // body->AddForce(Vec2(0, body->mass * 9.8f * PIXELS_PER_METRE));
+        body->AddForce(Vec2(0, body->mass * 9.8f * PIXELS_PER_METRE));
         // Push
         // body->AddForce(pushForce);
         // if (body->position.y > liquid.y)
-        //     // Drag
-        //     body->AddForce(Force::GenerateDragForce(*body, 0.01));
+        // Drag
+        body->AddForce(Force::GenerateDragForce(*body, 0.01));
         // else
         // Wind
         // body->AddForce(Vec2(10 * PIXELS_PER_METRE, 0));
@@ -159,7 +159,7 @@ void Application::Update()
             {
                 bodies[i]->isColliding = true;
                 bodies[j]->isColliding = true;
-                contact.ResolvePenetration();
+                contact.ResolveCollision();
 
                 Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFFF00FF);
                 Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFFF00FF);

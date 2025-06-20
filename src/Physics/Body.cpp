@@ -23,6 +23,8 @@ Body::Body(Shape *shape, float x, float y, float mass)
         this->invI = 0.0;
     else
         this->invI = 1.0 / I;
+    this->restitution = 1.0;
+
     std::cout << "Body constructor called!\n";
 }
 
@@ -94,8 +96,16 @@ void Body::ClearTorques()
     sumTorques *= 0;
 }
 
-bool Body::IsStatic()
+bool Body::IsStatic() const
 {
     float epsilon = 0.005f;
     return fabs(invMass - 0.0f) < epsilon;
+}
+
+void Body::ApplyImpulse(const Vec2 &j)
+{
+    if (IsStatic())
+        return;
+
+    velocity += j * invMass;
 }

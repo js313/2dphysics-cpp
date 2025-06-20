@@ -28,6 +28,8 @@ struct Body
     float I;
     float invI;
 
+    float restitution;
+
     Shape *shape;
 
     Body(Shape *shape, float x, float y, float mass);
@@ -44,7 +46,9 @@ struct Body
 
     void Update(float dt);
 
-    bool IsStatic();
+    bool IsStatic() const;
+    void MoveBy(const Vec2 &displacement) const;
+    void ApplyImpulse(const Vec2 &j);
 };
 
 #endif
