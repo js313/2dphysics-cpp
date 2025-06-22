@@ -9,6 +9,10 @@ bool CollisionDetection::IsColliding(Body *const a, Body *const b, Contact &cont
     {
         return IsCollidingCircleCircle(a, b, contact);
     }
+    else if ((shapeA->GetType() == POLYGON || shapeA->GetType() == BOX) && (shapeB->GetType() == POLYGON || shapeB->GetType() == BOX))
+    {
+        return IsCollidingPolygonPolygon(a, b, contact);
+    }
     return false;
 }
 
@@ -35,4 +39,12 @@ bool CollisionDetection::IsCollidingCircleCircle(Body *const a, Body *const b, C
     contact.depth = (contact.end - contact.start).Magnitude();
 
     return centreDistanceSquared <= (circleARadius + circleBRadius) * (circleARadius + circleBRadius);
+}
+
+bool CollisionDetection::IsCollidingPolygonPolygon(Body *const a, Body *const b, Contact &contact)
+{
+    const PolygonShape *aPolygonShape = (PolygonShape *)a->shape;
+    const PolygonShape *bPolygonShape = (PolygonShape *)b->shape;
+
+    return aPolygonShape->FindMinSeperation(*bPolygonShape) < 0 && bPolygonShape->FindMinSeperation(*aPolygonShape) < 0;
 }

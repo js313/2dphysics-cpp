@@ -39,6 +39,8 @@ struct PolygonShape : public Shape
     ShapeType GetType() const override;
     float GetMoIPerUnitMass() const override;
     void UpdateVertices(float rotation, const Vec2 &position);
+    Vec2 EdgeAt(int index) const;
+    float FindMinSeperation(const PolygonShape &other) const;
 };
 
 struct BoxShape : public PolygonShape

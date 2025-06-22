@@ -11,9 +11,10 @@ struct CollisionDetection
 
     static bool IsCollidingCircleCircle(Body *const a, Body *const b, Contact &contact);
 
+    static bool IsCollidingPolygonPolygon(Body *a, Body *b, Contact &contact);
+
     // TODO:
     // static void IsCollidingCirclePolygon(Body *a, Body *b);
-    // static void IsCollidingPolygonPolygon(Body *a, Body *b);
 };
 
 #endif

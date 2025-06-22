@@ -47,7 +47,6 @@ struct Body
     void Update(float dt);
 
     bool IsStatic() const;
-    void MoveBy(const Vec2 &displacement) const;
     void ApplyImpulse(const Vec2 &j);
 };
 
