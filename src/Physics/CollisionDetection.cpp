@@ -1,4 +1,5 @@
 #include "./CollisionDetection.h"
+#include <iostream>
 
 bool CollisionDetection::IsColliding(Body *const a, Body *const b, Contact &contact)
 {
@@ -46,5 +47,37 @@ bool CollisionDetection::IsCollidingPolygonPolygon(Body *const a, Body *const b,
     const PolygonShape *aPolygonShape = (PolygonShape *)a->shape;
     const PolygonShape *bPolygonShape = (PolygonShape *)b->shape;
 
-    return aPolygonShape->FindMinSeperation(*bPolygonShape) < 0 && bPolygonShape->FindMinSeperation(*aPolygonShape) < 0;
+    Vec2 aAxis, aStartPoint;
+    Vec2 bAxis, bStartPoint;
+
+    float abSeperation = aPolygonShape->FindMinSeperation(*bPolygonShape, aAxis, aStartPoint);
+    if (abSeperation >= 0)
+        return false;
+
+    float baSeperation = bPolygonShape->FindMinSeperation(*aPolygonShape, bAxis, bStartPoint);
+    if (baSeperation >= 0)
+        return false;
+
+    contact.a = a;
+    contact.b = b;
+    // If body a's edge is involved in the collision then abSeperation will have higher value
+    // else baSeperation will have a higher value, as in the FindMinSeperation function we are assuming that
+    // body a's(the body passed as first argument) edge is the one with colliding edge and the other one
+    // has a colliding vertex
+    if (abSeperation > baSeperation)
+    {
+        contact.depth = -abSeperation;
+        contact.normal = aAxis.Normal();
+        contact.start = aStartPoint;
+        contact.end = contact.start + (contact.normal * contact.depth);
+    }
+    else if (abSeperation < baSeperation)
+    {
+        contact.depth = -baSeperation;
+        contact.normal = -bAxis.Normal();
+        contact.end = bStartPoint;
+        contact.start = contact.end - (contact.normal * contact.depth);
+    }
+
+    return true;
 }

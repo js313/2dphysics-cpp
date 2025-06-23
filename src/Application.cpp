@@ -16,6 +16,7 @@ void Application::Setup()
     running = Graphics::OpenWindow();
     bodies.push_back(new Body(new BoxShape(200, 200), Graphics::Width() / 2, 100, 1.0));
     bodies.push_back(new Body(new BoxShape(200, 200), Graphics::Width() / 2, 500, 1.0));
+    bodies[0]->rotation = 90;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -114,7 +115,7 @@ void Application::Update()
         // Drag
         // body->AddForce(Force::GenerateDragForce(*body, 0.003));
         // Torque
-        body->AddTorque(200.0);
+        // body->AddTorque(200.0);
         // Spring
         // body->AddForce(Force::GenerateSpringForce(*body, anchor, 300.0, 30.0));
 

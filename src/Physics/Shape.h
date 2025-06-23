@@ -40,7 +40,7 @@ struct PolygonShape : public Shape
     float GetMoIPerUnitMass() const override;
     void UpdateVertices(float rotation, const Vec2 &position);
     Vec2 EdgeAt(int index) const;
-    float FindMinSeperation(const PolygonShape &other) const;
+    float FindMinSeperation(const PolygonShape &other, Vec2 &axis, Vec2 &point) const;
 };
 
 struct BoxShape : public PolygonShape
