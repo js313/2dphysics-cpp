@@ -1,5 +1,4 @@
 #include "./CollisionDetection.h"
-#include <iostream>
 
 bool CollisionDetection::IsColliding(Body *const a, Body *const b, Contact &contact)
 {
@@ -64,7 +63,7 @@ bool CollisionDetection::IsCollidingPolygonPolygon(Body *const a, Body *const b,
     // else baSeperation will have a higher value, as in the FindMinSeperation function we are assuming that
     // body a's(the body passed as first argument) edge is the one with colliding edge and the other one
     // has a colliding vertex
-    if (abSeperation > baSeperation)
+    if (abSeperation >= baSeperation)
     {
         contact.depth = -abSeperation;
         contact.normal = aAxis.Normal();

@@ -17,15 +17,20 @@ void Contact::ResolveCollision()
 
     float e = std::min(a->restitution, b->restitution);
 
-    const Vec2 vrel = a->velocity - b->velocity;
+    Vec2 ra = end - a->position;
+    Vec2 rb = start - b->position;
+    Vec2 va = a->velocity + Vec2(-a->angularVelocity * ra.y, a->angularVelocity * ra.x);
+    Vec2 vb = b->velocity + Vec2(-b->angularVelocity * rb.y, b->angularVelocity * rb.x);
+    const Vec2 vrel = va - vb;
 
     float vrelDotNormal = vrel.Dot(normal);
 
     const Vec2 impulseDirection = normal;
-    const float impulseMagnitude = -(1 + e) * vrelDotNormal / (a->invMass + b->invMass);
+    // Simplified version for 2D physics, as Cross products don't make complete sense in only 2 dimesnsions
+    const float impulseMagnitude = -(1 + e) * vrelDotNormal / ((a->invMass + b->invMass) + ra.Cross(normal) * ra.Cross(normal) * a->invI + rb.Cross(normal) * rb.Cross(normal) * b->invI);
 
     Vec2 j = impulseDirection * impulseMagnitude;
 
-    a->ApplyImpulse(j);
-    b->ApplyImpulse(-j);
+    a->ApplyImpulse(j, ra);
+    b->ApplyImpulse(-j, rb);
 }

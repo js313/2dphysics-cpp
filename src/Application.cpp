@@ -14,9 +14,11 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-    bodies.push_back(new Body(new BoxShape(200, 200), Graphics::Width() / 2, 100, 1.0));
-    bodies.push_back(new Body(new BoxShape(200, 200), Graphics::Width() / 2, 500, 1.0));
-    bodies[0]->rotation = 90;
+    bodies.push_back(new Body(new BoxShape(100, 100), Graphics::Width() / 2, 500, 0.0));
+    bodies.push_back(new Body(new BoxShape(Graphics::Width() - 100, 200), Graphics::Width() / 2, Graphics::Height() - 150, 0.0));
+    // bodies[0]->rotation = 1.4;
+    bodies[0]->restitution = 0.5;
+    bodies[1]->restitution = 0.2;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -59,14 +61,14 @@ void Application::Input()
             {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
-                bodies.push_back(new Body(new CircleShape(50.0), x, y, 5.0));
+                bodies.push_back(new Body(new BoxShape(50.0, 50.0), x, y, 100.0));
             }
             break;
         case SDL_MOUSEMOTION:
             int x = 0, y = 0;
             SDL_GetMouseState(&x, &y);
-            bodies[0]->position.x = x;
-            bodies[0]->position.y = y;
+            // bodies[0]->position.x = x;
+            // bodies[0]->position.y = y;
             break;
         }
     }
@@ -101,7 +103,7 @@ void Application::Update()
     for (Body *body : bodies)
     {
         // Weight
-        // body->AddForce(Vec2(0, body->mass * 9.8f * PIXELS_PER_METRE));
+        body->AddForce(Vec2(0, body->mass * 9.8f * PIXELS_PER_METRE));
         // Push
         // body->AddForce(pushForce);
         // if (body->position.y > liquid.y)
@@ -160,7 +162,7 @@ void Application::Update()
             {
                 bodies[i]->isColliding = true;
                 bodies[j]->isColliding = true;
-                // contact.ResolveCollision();
+                contact.ResolveCollision();
 
                 Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFFF00FF);
                 Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFFF00FF);
