@@ -17,8 +17,8 @@ void Application::Setup()
     bodies.push_back(new Body(new BoxShape(100, 100), Graphics::Width() / 2, 500, 0.0));
     bodies.push_back(new Body(new BoxShape(Graphics::Width() - 100, 200), Graphics::Width() / 2, Graphics::Height() - 150, 0.0));
     // bodies[0]->rotation = 1.4;
-    bodies[0]->restitution = 0.5;
-    bodies[1]->restitution = 0.2;
+    bodies[0]->restitution = 0.1;
+    bodies[1]->restitution = 0.1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -61,7 +61,7 @@ void Application::Input()
             {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
-                bodies.push_back(new Body(new BoxShape(50.0, 50.0), x, y, 100.0));
+                bodies.push_back(new Body(new CircleShape(50.0), x, y, 100.0));
             }
             break;
         case SDL_MOUSEMOTION:
@@ -128,27 +128,6 @@ void Application::Update()
 
         int minWidthBound = 0, minHeightBound = 0;
         int maxWidthBound = Graphics::Width(), maxHeightBound = Graphics::Height();
-
-        if (body->shape->GetType() == CIRCLE) // Need this as type casting shape to circleShape inside
-        {
-            CircleShape *circleShape = (CircleShape *)body->shape;
-            if (body->position.x - circleShape->radius < minWidthBound || body->position.x + circleShape->radius > maxWidthBound)
-            {
-                body->velocity.x *= -0.9;
-                if (body->position.x - circleShape->radius < minWidthBound)
-                    body->position.x = circleShape->radius;
-                else
-                    body->position.x = maxWidthBound - circleShape->radius;
-            }
-            if (body->position.y - circleShape->radius < minHeightBound || body->position.y + circleShape->radius > maxHeightBound)
-            {
-                body->velocity.y *= -0.9;
-                if (body->position.y - circleShape->radius < minWidthBound)
-                    body->position.y = circleShape->radius;
-                else
-                    body->position.y = maxHeightBound - circleShape->radius;
-            }
-        }
     }
     for (int i = 0; i < bodies.size(); i++)
     {

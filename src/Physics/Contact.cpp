@@ -16,6 +16,7 @@ void Contact::ResolveCollision()
     ResolvePenetration();
 
     float e = std::min(a->restitution, b->restitution);
+    float f = std::min(a->friction, b->friction);
 
     Vec2 ra = end - a->position;
     Vec2 rb = start - b->position;
@@ -25,11 +26,21 @@ void Contact::ResolveCollision()
 
     float vrelDotNormal = vrel.Dot(normal);
 
-    const Vec2 impulseDirection = normal;
+    const Vec2 impulseDirectionN = normal;
     // Simplified version for 2D physics, as Cross products don't make complete sense in only 2 dimesnsions
-    const float impulseMagnitude = -(1 + e) * vrelDotNormal / ((a->invMass + b->invMass) + ra.Cross(normal) * ra.Cross(normal) * a->invI + rb.Cross(normal) * rb.Cross(normal) * b->invI);
+    const float impulseMagnitudeN = -(1 + e) * vrelDotNormal / ((a->invMass + b->invMass) + ra.Cross(normal) * ra.Cross(normal) * a->invI + rb.Cross(normal) * rb.Cross(normal) * b->invI);
 
-    Vec2 j = impulseDirection * impulseMagnitude;
+    Vec2 jn = impulseDirectionN * impulseMagnitudeN;
+
+    Vec2 tangent = normal.Normal();
+    float vrelDotTangent = vrel.Dot(tangent);
+
+    const Vec2 impulseDirectionT = tangent;
+    const float impulseMagnitudeT = f * -(1 + e) * vrelDotTangent / ((a->invMass + b->invMass) + ra.Cross(tangent) * ra.Cross(tangent) * a->invI + rb.Cross(tangent) * rb.Cross(tangent) * b->invI);
+
+    Vec2 jt = impulseDirectionT * impulseMagnitudeT;
+
+    Vec2 j = jn + jt;
 
     a->ApplyImpulse(j, ra);
     b->ApplyImpulse(-j, rb);

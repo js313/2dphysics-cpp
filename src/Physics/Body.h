@@ -29,6 +29,7 @@ struct Body
     float invI;
 
     float restitution;
+    float friction;
 
     Shape *shape;
 
