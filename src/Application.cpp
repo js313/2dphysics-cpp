@@ -15,7 +15,8 @@ void Application::Setup()
 {
     running = Graphics::OpenWindow();
     bodies.push_back(new Body(new BoxShape(100, 100), Graphics::Width() / 2, 500, 0.0));
-    bodies.push_back(new Body(new BoxShape(Graphics::Width() - 100, 200), Graphics::Width() / 2, Graphics::Height() - 150, 0.0));
+    // bodies.push_back(new Body(new BoxShape(Graphics::Width() - 100, 200), Graphics::Width() / 2, Graphics::Height() - 150, 0.0));
+    bodies.push_back(new Body(new CircleShape(50), Graphics::Width() / 2, 500, 0.0));
     // bodies[0]->rotation = 1.4;
     bodies[0]->restitution = 0.1;
     bodies[1]->restitution = 0.1;
@@ -67,8 +68,8 @@ void Application::Input()
         case SDL_MOUSEMOTION:
             int x = 0, y = 0;
             SDL_GetMouseState(&x, &y);
-            // bodies[0]->position.x = x;
-            // bodies[0]->position.y = y;
+            bodies[1]->position.x = x;
+            bodies[1]->position.y = y;
             break;
         }
     }
@@ -126,8 +127,8 @@ void Application::Update()
 
         body->Update(deltaTime);
 
-        int minWidthBound = 0, minHeightBound = 0;
-        int maxWidthBound = Graphics::Width(), maxHeightBound = Graphics::Height();
+        // int minWidthBound = 0, minHeightBound = 0;
+        // int maxWidthBound = Graphics::Width(), maxHeightBound = Graphics::Height();
     }
     for (int i = 0; i < bodies.size(); i++)
     {
