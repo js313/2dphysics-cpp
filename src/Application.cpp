@@ -15,11 +15,10 @@ void Application::Setup()
 {
     running = Graphics::OpenWindow();
     bodies.push_back(new Body(new BoxShape(100, 100), Graphics::Width() / 2, 500, 0.0));
-    // bodies.push_back(new Body(new BoxShape(Graphics::Width() - 100, 200), Graphics::Width() / 2, Graphics::Height() - 150, 0.0));
-    bodies.push_back(new Body(new CircleShape(50), Graphics::Width() / 2, 500, 0.0));
+    bodies.push_back(new Body(new BoxShape(Graphics::Width() - 100, 200), Graphics::Width() / 2, Graphics::Height() - 150, 0.0));
+    // bodies.push_back(new Body(new CircleShape(50), Graphics::Width() / 2, 500, 0.0));
     // bodies[0]->rotation = 1.4;
     bodies[0]->restitution = 0.1;
-    bodies[1]->restitution = 0.1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -46,6 +45,8 @@ void Application::Input()
                 pushForce.x = -50 * PIXELS_PER_METRE;
             if (event.key.keysym.sym == SDLK_RIGHT)
                 pushForce.x = 50 * PIXELS_PER_METRE;
+            if (event.key.keysym.sym == SDLK_d)
+                debug = !debug;
             break;
         case SDL_KEYUP:
             if (event.key.keysym.sym == SDLK_UP)
@@ -62,14 +63,15 @@ void Application::Input()
             {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
-                bodies.push_back(new Body(new CircleShape(50.0), x, y, 100.0));
+                // bodies.push_back(new Body(new CircleShape(20.0), x, y, 10.0));
+                bodies.push_back(new Body(new PolygonShape({Vec2(-15, 5), Vec2(-15, 0), Vec2(-5, -10), Vec2(15, -10), Vec2(20, 5), Vec2(10, 10)}), x, y, 10.0));
             }
             break;
         case SDL_MOUSEMOTION:
             int x = 0, y = 0;
             SDL_GetMouseState(&x, &y);
-            bodies[1]->position.x = x;
-            bodies[1]->position.y = y;
+            // bodies[1]->position.x = x;
+            // bodies[1]->position.y = y;
             break;
         }
     }
@@ -144,9 +146,12 @@ void Application::Update()
                 bodies[j]->isColliding = true;
                 contact.ResolveCollision();
 
-                Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFFF00FF);
-                Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFFF00FF);
-                Graphics::DrawLine(contact.a->position.x, contact.a->position.y, contact.a->position.x + contact.normal.x * 15, contact.a->position.y + contact.normal.y * 15, 0xFFFF00FF);
+                if (debug)
+                {
+                    Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFFF00FF);
+                    Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFFF00FF);
+                    Graphics::DrawLine(contact.a->position.x, contact.a->position.y, contact.a->position.x + contact.normal.x * 15, contact.a->position.y + contact.normal.y * 15, 0xFFFF00FF);
+                }
             }
         }
     }
@@ -160,16 +165,20 @@ void Application::Render()
     // Graphics::ClearScreen(0xFF056263);
     for (Body *body : bodies)
     {
-        Uint32 color = body->isColliding ? 0xFF0000FF : 0xFFFFFFFF;
         if (body->shape->GetType() == CIRCLE)
         {
             CircleShape *circleShape = (CircleShape *)body->shape;
-            Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, color);
+            Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, 0xFF00FF00);
         }
         else if (body->shape->GetType() == BOX)
         {
             BoxShape *boxShape = (BoxShape *)body->shape;
-            Graphics::DrawPolygon(body->position.x, body->position.y, boxShape->globalVertices, color);
+            Graphics::DrawPolygon(body->position.x, body->position.y, boxShape->globalVertices, 0xFF00FF00);
+        }
+        else if (body->shape->GetType() == POLYGON)
+        {
+            PolygonShape *polygonShape = (PolygonShape *)body->shape;
+            Graphics::DrawPolygon(body->position.x, body->position.y, polygonShape->globalVertices, 0xFF00FF00);
         }
     }
     Graphics::RenderFrame();

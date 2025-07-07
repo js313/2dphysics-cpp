@@ -26,6 +26,7 @@ float CircleShape::GetMoIPerUnitMass() const
 PolygonShape::PolygonShape(const std::vector<Vec2> vertices)
 {
     this->localVertices = vertices;
+    this->globalVertices = vertices;
     std::cout << "PolygonShape constructor called!\n";
 }
 
@@ -41,7 +42,7 @@ ShapeType PolygonShape::GetType() const
 
 float PolygonShape::GetMoIPerUnitMass() const
 {
-    return 0.0;
+    return 5000.0;
 }
 
 BoxShape::BoxShape(float width, float height) : PolygonShape({})
