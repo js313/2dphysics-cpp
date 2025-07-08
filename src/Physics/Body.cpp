@@ -1,5 +1,6 @@
 #include <iostream>
 #include "Body.h"
+#include "../Graphics.h"
 
 Body::Body(Shape *shape, float x, float y, float mass)
 {
@@ -33,6 +34,16 @@ Body::~Body()
 {
     delete shape;
     std::cout << "Body destructor called!\n";
+}
+
+void Body::SetTexture(const char *textureFileName)
+{
+    SDL_Surface *surface = IMG_Load(textureFileName);
+    if (surface)
+    {
+        texture = SDL_CreateTextureFromSurface(Graphics::renderer, surface);
+        SDL_FreeSurface(surface);
+    }
 }
 
 void Body::IntegrateLinear(float dt)

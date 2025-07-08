@@ -3,6 +3,8 @@
 
 #include "Vec2.h"
 #include "Shape.h"
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 
 struct Body
 {
@@ -32,6 +34,10 @@ struct Body
     float friction;
 
     Shape *shape;
+
+    SDL_Texture *texture = nullptr;
+
+    void SetTexture(const char *textureFileName);
 
     Body(Shape *shape, float x, float y, float mass);
     ~Body();
