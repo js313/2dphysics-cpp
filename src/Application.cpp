@@ -14,13 +14,17 @@ bool Application::IsRunning()
 void Application::Setup()
 {
     running = Graphics::OpenWindow();
-    bodies.push_back(new Body(new BoxShape(100, 100), Graphics::Width() / 2, 500, 0.0));
-    bodies.push_back(new Body(new BoxShape(Graphics::Width() - 100, 200), Graphics::Width() / 2, Graphics::Height() - 150, 0.0));
-    // bodies.push_back(new Body(new CircleShape(50), Graphics::Width() / 2, 500, 0.0));
-    // bodies[0]->rotation = 1.4;
-    bodies[0]->restitution = 0.1;
-    bodies[0]->rotation = 0.1;
-    bodies[0]->SetTexture("./assets/crate.png");
+    world = new World(-9.8f);
+
+    Body *bigBox = new Body(new BoxShape(100, 100), Graphics::Width() / 2, 500, 0.0);
+    bigBox->restitution = 0.1;
+    bigBox->rotation = 0.1;
+    bigBox->SetTexture("./assets/crate.png");
+
+    Body *floor = new Body(new BoxShape(Graphics::Width() - 100, 200), Graphics::Width() / 2, Graphics::Height() - 150, 0.0);
+
+    world->AddBody(bigBox);
+    world->AddBody(floor);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -65,14 +69,16 @@ void Application::Input()
             {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
-                bodies.push_back(new Body(new PolygonShape({Vec2(-15, 5), Vec2(-15, 0), Vec2(-5, -10), Vec2(15, -10), Vec2(20, 5), Vec2(10, 10)}), x, y, 10.0));
+                Body *stone = new Body(new PolygonShape({Vec2(-15, 5), Vec2(-15, 0), Vec2(-5, -10), Vec2(15, -10), Vec2(20, 5), Vec2(10, 10)}), x, y, 10.0);
+                world->AddBody(stone);
             }
             if (event.button.button == SDL_BUTTON_RIGHT)
             {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
-                bodies.push_back(new Body(new CircleShape(20.0), x, y, 10.0));
-                bodies[bodies.size() - 1]->SetTexture("./assets/basketball.png");
+                Body *basketball = new Body(new CircleShape(20.0), x, y, 10.0);
+                basketball->SetTexture("./assets/basketball.png");
+                world->AddBody(basketball);
             }
             break;
         case SDL_MOUSEMOTION:
@@ -107,62 +113,7 @@ void Application::Update()
 
     lastFrameTime = currentFrameTime;
 
-    // Mutual Gravitation Force
-    // Vec2 gravitationForce = Force::GenerateGravitationForce(*bodies[0], *bodies[1], 1000.0, 5.0, 100.0);
-    // bodies[0]->AddForce(gravitationForce);
-    // bodies[1]->AddForce(-gravitationForce);
-    for (Body *body : bodies)
-    {
-        // Weight
-        body->AddForce(Vec2(0, body->mass * 9.8f * PIXELS_PER_METRE));
-        // Push
-        // body->AddForce(pushForce);
-        // if (body->position.y > liquid.y)
-        // Drag
-        // body->AddForce(Force::GenerateDragForce(*body, 0.01));
-        // else
-        // Wind
-        // body->AddForce(Vec2(10 * PIXELS_PER_METRE, 0));
-        // Friction
-        // body->AddForce(Force::GenerateFrictionForce(*body, 10.0));
-        // Drag
-        // body->AddForce(Force::GenerateDragForce(*body, 0.003));
-        // Torque
-        // body->AddTorque(200.0);
-        // Spring
-        // body->AddForce(Force::GenerateSpringForce(*body, anchor, 300.0, 30.0));
-
-        // BAD, BAD, VERY BAD!!!
-        Graphics::ClearScreen(0xFF056263);
-
-        body->Update(deltaTime);
-
-        // int minWidthBound = 0, minHeightBound = 0;
-        // int maxWidthBound = Graphics::Width(), maxHeightBound = Graphics::Height();
-    }
-    for (int i = 0; i < bodies.size(); i++)
-    {
-        for (int j = i + 1; j < bodies.size(); j++)
-        {
-            bodies[i]->isColliding = false;
-            bodies[j]->isColliding = false;
-            Contact contact;
-
-            if (CollisionDetection::IsColliding(bodies[i], bodies[j], contact))
-            {
-                bodies[i]->isColliding = true;
-                bodies[j]->isColliding = true;
-                contact.ResolveCollision();
-
-                if (debug)
-                {
-                    Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFFF00FF);
-                    Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFFF00FF);
-                    Graphics::DrawLine(contact.a->position.x, contact.a->position.y, contact.a->position.x + contact.normal.x * 15, contact.a->position.y + contact.normal.y * 15, 0xFFFF00FF);
-                }
-            }
-        }
-    }
+    world->Update(deltaTime);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -170,8 +121,8 @@ void Application::Update()
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Render()
 {
-    // Graphics::ClearScreen(0xFF056263);
-    for (Body *body : bodies)
+    Graphics::ClearScreen(0xFF056263);
+    for (Body *body : world->GetBodies())
     {
         if (body->shape->GetType() == CIRCLE)
         {
@@ -203,10 +154,6 @@ void Application::Render()
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Destroy()
 {
-    for (Body *body : bodies)
-    {
-        delete body;
-    }
-
+    delete world;
     Graphics::CloseWindow();
 }

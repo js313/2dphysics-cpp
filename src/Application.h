@@ -4,14 +4,15 @@
 #include <vector>
 #include "./Graphics.h"
 #include "./Physics/Body.h"
+#include "./Physics/World.h"
 
 class Application
 {
 private:
     bool debug = false;
     bool running = false;
-    std::vector<Body *> bodies;
     Vec2 pushForce;
+    World *world;
 
     // SDL_Rect liquid;
 
