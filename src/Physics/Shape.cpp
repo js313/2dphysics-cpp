@@ -18,6 +18,11 @@ ShapeType CircleShape::GetType() const
     return CIRCLE;
 }
 
+void CircleShape::UpdateVertices(float rotation, const Vec2 &position)
+{
+    return;
+}
+
 float CircleShape::GetMoIPerUnitMass() const
 {
     return 0.5 * this->radius * this->radius;

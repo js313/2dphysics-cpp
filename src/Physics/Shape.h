@@ -16,6 +16,7 @@ struct Shape // abstract struct, as there is one(or more) pure virtual function
     virtual ~Shape() = default;
     // this is a pure virtual function
     virtual ShapeType GetType() const = 0; // "const" means The object this is called on, it's properties won't be modified
+    virtual void UpdateVertices(float rotation, const Vec2 &position) = 0;
     virtual float GetMoIPerUnitMass() const = 0;
 };
 
@@ -26,6 +27,7 @@ struct CircleShape : public Shape
     CircleShape(float radius);
     virtual ~CircleShape();
     ShapeType GetType() const override;
+    void UpdateVertices(float rotation, const Vec2 &position) override;
     float GetMoIPerUnitMass() const override;
 };
 
@@ -38,7 +40,7 @@ struct PolygonShape : public Shape
     virtual ~PolygonShape();
     ShapeType GetType() const override;
     float GetMoIPerUnitMass() const override;
-    void UpdateVertices(float rotation, const Vec2 &position);
+    void UpdateVertices(float rotation, const Vec2 &position) override;
     Vec2 EdgeAt(int index) const;
     float FindMinSeperation(const PolygonShape &other, Vec2 &axis, Vec2 &point) const;
 };
