@@ -127,3 +127,19 @@ void Body::ApplyImpulse(const Vec2 &j, const Vec2 &r)
     velocity += j * invMass;
     angularVelocity += r.Cross(j) * invI;
 }
+
+Vec2 Body::LocalSpaceToWorldSpace(const Vec2 &point)
+{
+    Vec2 rotated = point.Rotate(this->rotation);
+    return rotated + position;
+}
+
+Vec2 Body::WorldSpaceToLocalSpace(const Vec2 &point)
+{
+    float translatedX = point.x - position.x;
+    float translatedY = point.y - position.y;
+    float rotatedX = cos(-rotation) * translatedX - sin(-rotation) * translatedY;
+    float rotatedY = cos(-rotation) * translatedY + sin(-rotation) * translatedX;
+
+    return Vec2(rotatedX, rotatedY);
+}

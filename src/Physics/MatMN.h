@@ -6,6 +6,8 @@
 class MatMN
 {
     int M, N;
+
+public:
     VecN *rows;
 
     MatMN();

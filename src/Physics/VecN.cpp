@@ -62,7 +62,7 @@ VecN VecN::operator-(const VecN &v)
     return result;
 }
 
-VecN VecN::operator*(float n)
+VecN VecN::operator*(float n) const
 {
     VecN result = *this;
     for (int i = 0; i < N; i++)
@@ -86,10 +86,12 @@ const VecN &VecN::operator-=(const VecN &v)
 
 const VecN &VecN::operator*=(float n)
 {
-    return (*this) * n;
+    for (int i = 0; i < N; ++i)
+        data[i] *= n;
+    return *this;
 }
 
-float VecN::operator[](int index) const
+float &VecN::operator[](int index)
 {
     return data[index];
 }

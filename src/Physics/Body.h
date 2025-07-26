@@ -56,6 +56,9 @@ struct Body
     bool IsStatic() const;
     void ApplyImpulse(const Vec2 &j);
     void ApplyImpulse(const Vec2 &j, const Vec2 &r);
+
+    Vec2 LocalSpaceToWorldSpace(const Vec2 &point);
+    Vec2 WorldSpaceToLocalSpace(const Vec2 &point);
 };
 
 #endif
