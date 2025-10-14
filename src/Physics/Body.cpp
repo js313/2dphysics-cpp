@@ -46,7 +46,39 @@ void Body::SetTexture(const char *textureFileName)
     }
 }
 
-void Body::IntegrateLinear(float dt)
+// void Body::IntegrateLinear(float dt)
+// {
+//     if (IsStatic())
+//         return;
+
+//     // Find acceleration based on net of all forces applied
+//     acceleration = sumForces * invMass;
+
+//     // Integrate the acceleration to find the new velocity
+//     velocity += acceleration * dt;
+//     // Integrate the velocity to find the new position
+//     position += velocity * dt;
+
+//     ClearForces();
+// }
+
+// void Body::IntegrateAngular(float dt)
+// {
+//     if (IsStatic())
+//         return;
+
+//     // Find angular acceleration based on net of all forces applied
+//     angularAcceleration = sumTorques * invI;
+
+//     // Integrate the angular acceleration to find the new angular velocity
+//     angularVelocity += angularAcceleration * dt;
+//     // Integrate the angular velocity to find the new rotation angle(theta)
+//     rotation += angularVelocity * dt;
+
+//     ClearTorques();
+// }
+
+void Body::IntegrateForces(float dt)
 {
     if (IsStatic())
         return;
@@ -56,32 +88,28 @@ void Body::IntegrateLinear(float dt)
 
     // Integrate the acceleration to find the new velocity
     velocity += acceleration * dt;
-    // Integrate the velocity to find the new position
-    position += velocity * dt;
 
     ClearForces();
-}
-
-void Body::IntegrateAngular(float dt)
-{
-    if (IsStatic())
-        return;
 
     // Find angular acceleration based on net of all forces applied
     angularAcceleration = sumTorques * invI;
 
     // Integrate the angular acceleration to find the new angular velocity
     angularVelocity += angularAcceleration * dt;
-    // Integrate the angular velocity to find the new rotation angle(theta)
-    rotation += angularVelocity * dt;
 
     ClearTorques();
 }
 
-void Body::Update(float dt)
+void Body::IntegrateVelocities(float dt)
 {
-    IntegrateLinear(dt);
-    IntegrateAngular(dt);
+    if (IsStatic())
+        return;
+
+    // Integrate the velocity to find the new position
+    position += velocity * dt;
+    // Integrate the angular velocity to find the new rotation angle(theta)
+    rotation += angularVelocity * dt;
+    // Update vertices of the polygon
     shape->UpdateVertices(rotation, position);
 }
 

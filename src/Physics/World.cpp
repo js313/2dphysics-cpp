@@ -83,10 +83,26 @@ void World::Update(float dt)
             body->AddTorque(torque);
         }
 
-        body->Update(dt);
-
         // int minWidthBound = 0, minHeightBound = 0;
         // int maxWidthBound = Graphics::Width(), maxHeightBound = Graphics::Height();
+    }
+
+    // Integrate all forces
+    for (auto body : bodies)
+    {
+        body->IntegrateForces(dt);
+    }
+
+    // Solve all constraints
+    for (auto &constraint : constraints)
+    {
+        constraint->Solve();
+    }
+
+    // Integrate all the velocities
+    for (auto body : bodies)
+    {
+        body->IntegrateVelocities(dt);
     }
 
     CheckCollisions();

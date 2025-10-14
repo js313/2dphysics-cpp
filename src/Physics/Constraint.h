@@ -20,7 +20,7 @@ public:
     MatMN GetInvM();
     VecN GetVelocities();
 
-    // virtual void Solve() {};
+    virtual void Solve() {};
 };
 
 class JointConstraint : public Constraint
@@ -30,7 +30,7 @@ class JointConstraint : public Constraint
 public:
     JointConstraint();
     JointConstraint(Body *a, Body *b, const Vec2 &anchorPoint);
-    // void Solve() override;
+    void Solve() override;
 };
 
 class PenetrationConstraint : public Constraint

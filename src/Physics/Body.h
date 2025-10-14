@@ -51,7 +51,8 @@ struct Body
     void ClearForces();
     void ClearTorques();
 
-    void Update(float dt);
+    void IntegrateForces(float dt);
+    void IntegrateVelocities(float dt);
 
     bool IsStatic() const;
     void ApplyImpulse(const Vec2 &j);
