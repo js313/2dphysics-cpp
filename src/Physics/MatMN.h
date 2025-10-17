@@ -21,6 +21,8 @@ public:
     const MatMN &operator=(const MatMN &m);
     VecN operator*(const VecN &v) const;
     MatMN operator*(const MatMN &m) const;
+
+    static VecN SolveGaussSeidel(const MatMN &A, const VecN &b);
 };
 
 #endif

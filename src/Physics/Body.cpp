@@ -139,7 +139,7 @@ bool Body::IsStatic() const
     return fabs(invMass - 0.0f) < epsilon;
 }
 
-void Body::ApplyImpulse(const Vec2 &j)
+void Body::ApplyImpulseLinear(const Vec2 &j)
 {
     if (IsStatic())
         return;
@@ -147,7 +147,15 @@ void Body::ApplyImpulse(const Vec2 &j)
     velocity += j * invMass;
 }
 
-void Body::ApplyImpulse(const Vec2 &j, const Vec2 &r)
+void Body::ApplyImpulseAngular(float j)
+{
+    if (IsStatic())
+        return;
+
+    angularVelocity += j * invI;
+}
+
+void Body::ApplyImpulseAtPoint(const Vec2 &j, const Vec2 &r)
 {
     if (IsStatic())
         return;

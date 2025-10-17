@@ -45,6 +45,8 @@ void JointConstraint::Solve()
     const Vec2 ra = pa - a->position;
     const Vec2 rb = pb - b->position;
 
+    jacobian.Zero();
+
     Vec2 J1 = (pa - pb) * 2;
     jacobian.rows[0][0] = J1.x; // A linear velocity
     jacobian.rows[0][1] = J1.y; // A linear velocity
@@ -63,8 +65,21 @@ void JointConstraint::Solve()
     const MatMN invM = GetInvM();
 
     const MatMN J = jacobian;
+    // Direction of impulses
     const MatMN Jt = jacobian.Transpose();
 
-    VecN numerator = J * V * -1.0f;
-    MatMN denominator = J * invM * Jt;
+    VecN rhs = J * V * -1.0f;
+    MatMN lhs = J * invM * Jt;
+
+    // Magnitude of impulses
+    VecN lambda = MatMN::SolveGaussSeidel(lhs, rhs);
+
+    // Impulses with direction and magnitude
+    VecN impulses = Jt * lambda;
+
+    a->ApplyImpulseLinear(Vec2(impulses[0], impulses[1]));
+    a->ApplyImpulseAngular(impulses[2]);
+
+    b->ApplyImpulseLinear(Vec2(impulses[3], impulses[4]));
+    b->ApplyImpulseAngular(impulses[5]);
 }

@@ -1,25 +1,26 @@
 {
     "configurations": [
         {
-            "name": "Mac",
+            "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/opt/homebrew/include/SDL2",
-                "/opt/homebrew/lib",
-                "/opt/homebrew/include"
+                "/usr/include/SDL2",
+                "/usr/local/include",
+                "/usr/include"
             ],
             "browse": {
                 "path": [
-                    "/opt/homebrew/include/SDL2",
-                    "/opt/homebrew/lib"
+                    "/usr/include/SDL2",
+                    "/usr/local/include",
+                    "/usr/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true
             },
             "defines": [],
-            "compilerPath": "/usr/bin/clang",
+            "compilerPath": "/usr/bin/g++",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "macos-clang-arm64"
+            "intelliSenseMode": "linux-gcc-x64"
         }
     ],
     "version": 4

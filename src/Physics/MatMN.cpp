@@ -11,7 +11,7 @@ MatMN::MatMN(int M, int N) : M(M), N(N)
 
 MatMN::MatMN(const MatMN &m)
 {
-    *this = m; // overloaded '=' called
+    *this = m;
 }
 
 MatMN::~MatMN()
@@ -27,48 +27,62 @@ void MatMN::Zero()
 
 MatMN MatMN::Transpose() const
 {
-    MatMN t = MatMN(*this);
+    MatMN result(N, M);
     for (int i = 0; i < M; i++)
         for (int j = 0; j < N; j++)
-            t.rows[j][i] = (*this).rows[i][j];
-
-    return t;
+            result.rows[j][i] = rows[i][j];
+    return result;
 }
 
 const MatMN &MatMN::operator=(const MatMN &m)
 {
     M = m.M;
     N = m.N;
-    rows = new VecN(M);
+    rows = new VecN[M];
     for (int i = 0; i < M; i++)
         rows[i] = m.rows[i];
-
     return *this;
 }
 
 VecN MatMN::operator*(const VecN &v) const
 {
-    if (N != v.N)
+    if (v.N != N)
         return v;
-    VecN res = VecN(M);
-
+    VecN result(M);
     for (int i = 0; i < M; i++)
-        res[i] = rows[i].Dot(v);
-
-    return res;
+        result[i] = v.Dot(rows[i]);
+    return result;
 }
 
 MatMN MatMN::operator*(const MatMN &m) const
 {
-    if (N != m.M)
+    if (m.M != N && m.N != M)
         return m;
-
-    MatMN t = m.Transpose();
-    MatMN res = MatMN(M, m.N);
-
+    MatMN tranposed = m.Transpose();
+    MatMN result(M, m.N);
     for (int i = 0; i < M; i++)
-        for (int j = 0; j < N; j++)
-            res.rows[i][j] = rows[i].Dot(t.rows[j]);
+        for (int j = 0; j < m.N; j++)
+            result.rows[i][j] = rows[i].Dot(tranposed.rows[j]);
+    return result;
+}
 
-    return res;
+VecN MatMN::SolveGaussSeidel(const MatMN &A, const VecN &b)
+{
+    const int N = b.N;
+    VecN X(N);
+    X.Zero();
+
+    // Iterate N times
+    for (int iterations = 0; iterations < N; iterations++)
+    {
+        for (int i = 0; i < N; i++)
+        {
+            float dx = (b[i] / A.rows[i][i]) - (A.rows[i].Dot(X) / A.rows[i][i]);
+            if (dx == dx)
+            {
+                X[i] += dx;
+            }
+        }
+    }
+    return X;
 }
