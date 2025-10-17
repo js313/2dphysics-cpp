@@ -1,10 +1,11 @@
-#include <iostream>
-#include "Body.h"
 #include "../Graphics.h"
+#include "Body.h"
+#include <math.h>
+#include <iostream>
 
-Body::Body(Shape *shape, float x, float y, float mass)
+Body::Body(const Shape &shape, float x, float y, float mass)
 {
-    this->shape = shape;
+    this->shape = shape.Clone();
     this->position = Vec2(x, y);
     this->velocity = Vec2(0, 0);
     this->acceleration = Vec2(0, 0);
@@ -12,29 +13,36 @@ Body::Body(Shape *shape, float x, float y, float mass)
     this->angularVelocity = 0.0;
     this->angularAcceleration = 0.0;
     this->sumForces = Vec2(0, 0);
-    this->sumTorques = 0.0;
-    this->mass = mass;
-    if (mass == 0.0)
-        this->invMass = 0.0;
-    else
-        this->invMass = 1.0 / mass;
-
-    this->I = this->shape->GetMoIPerUnitMass() * this->mass;
-    if (I == 0.0)
-        this->invI = 0.0;
-    else
-        this->invI = 1.0 / I;
-    this->restitution = 1.0;
+    this->sumTorque = 0.0;
+    this->restitution = 0.6;
     this->friction = 0.7;
-    shape->UpdateVertices(rotation, position);
-
-    std::cout << "Body constructor called!\n";
+    this->mass = mass;
+    if (mass != 0.0)
+    {
+        this->invMass = 1.0 / mass;
+    }
+    else
+    {
+        this->invMass = 0.0;
+    }
+    I = shape.GetMomentOfInertia() * mass;
+    if (I != 0.0)
+    {
+        this->invI = 1.0 / I;
+    }
+    else
+    {
+        this->invI = 0.0;
+    }
+    this->shape->UpdateVertices(rotation, position);
+    std::cout << "Body constructor called!" << std::endl;
 }
 
 Body::~Body()
 {
     delete shape;
-    std::cout << "Body destructor called!\n";
+    SDL_DestroyTexture(texture);
+    std::cout << "Body destructor called!" << std::endl;
 }
 
 void Body::SetTexture(const char *textureFileName)
@@ -47,71 +55,10 @@ void Body::SetTexture(const char *textureFileName)
     }
 }
 
-// void Body::IntegrateLinear(float dt)
-// {
-//     if (IsStatic())
-//         return;
-
-//     // Find acceleration based on net of all forces applied
-//     acceleration = sumForces * invMass;
-
-//     // Integrate the acceleration to find the new velocity
-//     velocity += acceleration * dt;
-//     // Integrate the velocity to find the new position
-//     position += velocity * dt;
-
-//     ClearForces();
-// }
-
-// void Body::IntegrateAngular(float dt)
-// {
-//     if (IsStatic())
-//         return;
-
-//     // Find angular acceleration based on net of all forces applied
-//     angularAcceleration = sumTorques * invI;
-
-//     // Integrate the angular acceleration to find the new angular velocity
-//     angularVelocity += angularAcceleration * dt;
-//     // Integrate the angular velocity to find the new rotation angle(theta)
-//     rotation += angularVelocity * dt;
-
-//     ClearTorques();
-// }
-
-void Body::IntegrateForces(float dt)
+bool Body::IsStatic() const
 {
-    if (IsStatic())
-        return;
-
-    // Find acceleration based on net of all forces applied
-    acceleration = sumForces * invMass;
-
-    // Integrate the acceleration to find the new velocity
-    velocity += acceleration * dt;
-
-    ClearForces();
-
-    // Find angular acceleration based on net of all forces applied
-    angularAcceleration = sumTorques * invI;
-
-    // Integrate the angular acceleration to find the new angular velocity
-    angularVelocity += angularAcceleration * dt;
-
-    ClearTorques();
-}
-
-void Body::IntegrateVelocities(float dt)
-{
-    if (IsStatic())
-        return;
-
-    // Integrate the velocity to find the new position
-    position += velocity * dt;
-    // Integrate the angular velocity to find the new rotation angle(theta)
-    rotation += angularVelocity * dt;
-    // Update vertices of the polygon
-    shape->UpdateVertices(rotation, position);
+    const float epsilon = 0.005f;
+    return fabs(invMass - 0.0) < epsilon;
 }
 
 void Body::AddForce(const Vec2 &force)
@@ -121,38 +68,45 @@ void Body::AddForce(const Vec2 &force)
 
 void Body::AddTorque(float torque)
 {
-    sumTorques += torque;
+    sumTorque += torque;
 }
 
 void Body::ClearForces()
 {
-    sumForces *= 0;
+    sumForces = Vec2(0.0, 0.0);
 }
 
-void Body::ClearTorques()
+void Body::ClearTorque()
 {
-    sumTorques *= 0;
+    sumTorque = 0.0;
 }
 
-bool Body::IsStatic() const
+Vec2 Body::LocalSpaceToWorldSpace(const Vec2 &point) const
 {
-    float epsilon = 0.005f;
-    return fabs(invMass - 0.0f) < epsilon;
+    Vec2 rotated = point.Rotate(rotation);
+    return rotated + position;
+}
+
+Vec2 Body::WorldSpaceToLocalSpace(const Vec2 &point) const
+{
+    float translatedX = point.x - position.x;
+    float translatedY = point.y - position.y;
+    float rotatedX = cos(-rotation) * translatedX - sin(-rotation) * translatedY;
+    float rotatedY = cos(-rotation) * translatedY + sin(-rotation) * translatedX;
+    return Vec2(rotatedX, rotatedY);
 }
 
 void Body::ApplyImpulseLinear(const Vec2 &j)
 {
     if (IsStatic())
         return;
-
     velocity += j * invMass;
 }
 
-void Body::ApplyImpulseAngular(float j)
+void Body::ApplyImpulseAngular(const float j)
 {
     if (IsStatic())
         return;
-
     angularVelocity += j * invI;
 }
 
@@ -160,23 +114,43 @@ void Body::ApplyImpulseAtPoint(const Vec2 &j, const Vec2 &r)
 {
     if (IsStatic())
         return;
-
     velocity += j * invMass;
     angularVelocity += r.Cross(j) * invI;
 }
 
-Vec2 Body::LocalSpaceToWorldSpace(const Vec2 &point)
+void Body::IntegrateForces(const float dt)
 {
-    Vec2 rotated = point.Rotate(this->rotation);
-    return rotated + position;
+    if (IsStatic())
+        return;
+
+    // Find the acceleration based on the forces that are being applied and the mass
+    acceleration = sumForces * invMass;
+
+    // Integrate the acceleration to find the new velocity
+    velocity += acceleration * dt;
+
+    // Find the angular acceleration based on the torque that is being applied and the moment of inertia
+    angularAcceleration = sumTorque * invI;
+
+    // Integrate the angular acceleration to find the new angular velocity
+    angularVelocity += angularAcceleration * dt;
+
+    // Clear all the forces and torque acting on the object before the next physics step
+    ClearForces();
+    ClearTorque();
 }
 
-Vec2 Body::WorldSpaceToLocalSpace(const Vec2 &point)
+void Body::IntegrateVelocities(const float dt)
 {
-    float translatedX = point.x - position.x;
-    float translatedY = point.y - position.y;
-    float rotatedX = cos(-rotation) * translatedX - sin(-rotation) * translatedY;
-    float rotatedY = cos(-rotation) * translatedY + sin(-rotation) * translatedX;
+    if (IsStatic())
+        return;
 
-    return Vec2(rotatedX, rotatedY);
+    // Integrate the velocity to find the new position
+    position += velocity * dt;
+
+    // Integrate the angular velocity to find the new rotation angle
+    rotation += angularVelocity * dt;
+
+    // Update the vertices to adjust them to the new position/rotation
+    shape->UpdateVertices(rotation, position);
 }

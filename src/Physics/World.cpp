@@ -1,23 +1,26 @@
-#include <iostream>
 #include "World.h"
 #include "Constants.h"
-#include "Contact.h"
 #include "CollisionDetection.h"
+#include "../Graphics.h"
+#include <iostream>
 
 World::World(float gravity)
 {
-    G = -gravity; // in sdl2 y coordinate increases in the downward
-    std::cout << "World constructor called!\n";
+    G = -gravity;
+    std::cout << "World constructor called!" << std::endl;
 }
 
 World::~World()
 {
-    for (auto &body : bodies)
-        delete (body);
-
-    for (auto &constraint : constraints)
-        delete (constraint);
-    std::cout << "World destructor called!\n";
+    for (auto body : bodies)
+    {
+        delete body;
+    }
+    for (auto constraint : constraints)
+    {
+        delete constraint;
+    }
+    std::cout << "World destructor called!" << std::endl;
 }
 
 void World::AddBody(Body *body)
@@ -52,93 +55,88 @@ void World::AddTorque(float torque)
 
 void World::Update(float dt)
 {
-    for (auto body : bodies)
+    // Create a vector of penetration constraints that will be solved frame per frame
+    std::vector<PenetrationConstraint> penetrations;
+
+    // Loop all bodies of the world applying forces
+    for (auto &body : bodies)
     {
-        // Weight
-        body->AddForce(Vec2(0, body->mass * G * PIXELS_PER_METRE));
-        // Push
-        // body->AddForce(pushForce);
-        // if (body->position.y > liquid.y)
-        // Drag
-        // body->AddForce(Force::GenerateDragForce(*body, 0.01));
-        // else
-        // Wind
-        // body->AddForce(Vec2(10 * PIXELS_PER_METRE, 0));
-        // Friction
-        // body->AddForce(Force::GenerateFrictionForce(*body, 10.0));
-        // Drag
-        // body->AddForce(Force::GenerateDragForce(*body, 0.003));
-        // Torque
-        // body->AddTorque(200.0);
-        // Spring
-        // body->AddForce(Force::GenerateSpringForce(*body, anchor, 300.0, 30.0));
+        // Apply the weight force to all bodies
+        Vec2 weight = Vec2(0.0, body->mass * G * PIXELS_PER_METER);
+        body->AddForce(weight);
 
+        // Apply forces to all bodies
         for (auto force : forces)
-        {
             body->AddForce(force);
-        }
 
+        // Apply torque to all bodies
         for (auto torque : torques)
-        {
             body->AddTorque(torque);
-        }
-
-        // int minWidthBound = 0, minHeightBound = 0;
-        // int maxWidthBound = Graphics::Width(), maxHeightBound = Graphics::Height();
     }
 
-    // Integrate all forces
-    for (auto body : bodies)
+    // Integrate all the forces
+    for (auto &body : bodies)
     {
         body->IntegrateForces(dt);
     }
 
-    // Pre Solve all constraints
+    // Check all the bodies with all other bodies detecting collisions
+    for (int i = 0; i <= bodies.size() - 1; i++)
+    {
+        for (int j = i + 1; j < bodies.size(); j++)
+        {
+            Body *a = bodies[i];
+            Body *b = bodies[j];
+
+            std::vector<Contact> contacts;
+            if (CollisionDetection::IsColliding(a, b, contacts))
+            {
+                for (auto contact : contacts)
+                {
+                    // Draw collision points
+                    Graphics::DrawCircle(contact.start.x, contact.start.y, 5, 0.0, 0xFF00FFFF);
+                    Graphics::DrawCircle(contact.end.x, contact.end.y, 2, 0.0, 0xFF00FFFF);
+
+                    // Create a new penetration constraint
+                    PenetrationConstraint penetration(contact.a, contact.b, contact.start, contact.end, contact.normal);
+                    penetrations.push_back(penetration);
+                }
+            }
+        }
+    }
+
+    // Solve all constraints
     for (auto &constraint : constraints)
     {
         constraint->PreSolve(dt);
     }
-
-    // Solve all constraints
+    for (auto &constraint : penetrations)
+    {
+        constraint.PreSolve(dt);
+    }
     for (int i = 0; i < 10; i++)
     {
         for (auto &constraint : constraints)
         {
             constraint->Solve();
         }
+        for (auto &constraint : penetrations)
+        {
+            constraint.Solve();
+        }
+    }
+    for (auto &constraint : constraints)
+    {
+        constraint->PostSolve();
+    }
+    for (auto &constraint : penetrations)
+    {
+        constraint.PostSolve();
     }
 
     // Integrate all the velocities
-    for (auto body : bodies)
+    for (auto &body : bodies)
     {
         body->IntegrateVelocities(dt);
-    }
-
-    // CheckCollisions();
-}
-
-void World::CheckCollisions()
-{
-    for (int i = 0; i < bodies.size(); i++)
-    {
-        for (int j = i + 1; j < bodies.size(); j++)
-        {
-            bodies[i]->isColliding = false;
-            bodies[j]->isColliding = false;
-            Contact contact;
-
-            if (CollisionDetection::IsColliding(bodies[i], bodies[j], contact))
-            {
-                bodies[i]->isColliding = true;
-                bodies[j]->isColliding = true;
-                contact.ResolveCollision();
-                // if (debug)
-                // {
-                //     Graphics::DrawFillCircle(contact.start.x, contact.start.y, 5, 0xFFFF00FF);
-                //     Graphics::DrawFillCircle(contact.end.x, contact.end.y, 5, 0xFFFF00FF);
-                //     Graphics::DrawLine(contact.a->position.x, contact.a->position.y, contact.a->position.x + contact.normal.x * 15, contact.a->position.y + contact.normal.y * 15, 0xFFFF00FF);
-                // }
-            }
-        }
     }
 }

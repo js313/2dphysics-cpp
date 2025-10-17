@@ -11,12 +11,9 @@ class Application
 private:
     bool debug = false;
     bool running = false;
-    Vec2 pushForce;
     World *world;
 
-    // SDL_Rect liquid;
-
-    // Vec2 anchor;
+    SDL_Texture *bgTexture;
 
 public:
     Application() = default;

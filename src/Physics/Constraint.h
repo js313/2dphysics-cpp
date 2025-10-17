@@ -3,7 +3,6 @@
 
 #include "Body.h"
 #include "MatMN.h"
-#include "VecN.h"
 
 class Constraint
 {
@@ -11,21 +10,22 @@ public:
     Body *a;
     Body *b;
 
-    // Anchor points in local space for respective bodies
-    Vec2 aPoint;
-    Vec2 bPoint;
+    Vec2 aPoint; // The constraint point in A's local space
+    Vec2 bPoint; // The constraint point in B's local space
 
     virtual ~Constraint() = default;
 
-    MatMN GetInvM();
-    VecN GetVelocities();
+    MatMN GetInvM() const;
+    VecN GetVelocities() const;
 
-    virtual void PreSolve(float dt) {};
-    virtual void Solve() {};
+    virtual void PreSolve(const float dt) {}
+    virtual void Solve() {}
+    virtual void PostSolve() {}
 };
 
 class JointConstraint : public Constraint
 {
+private:
     MatMN jacobian;
     VecN cachedLambda;
     float bias;
@@ -33,16 +33,26 @@ class JointConstraint : public Constraint
 public:
     JointConstraint();
     JointConstraint(Body *a, Body *b, const Vec2 &anchorPoint);
-    void PreSolve(float dt) override;
+    void PreSolve(const float dt) override;
     void Solve() override;
+    void PostSolve() override;
 };
 
 class PenetrationConstraint : public Constraint
 {
+private:
     MatMN jacobian;
+    VecN cachedLambda;
+    float bias;
+    Vec2 normal;    // Normal direction of the penetration in A's local space
+    float friction; // Friction coefficient between the two penetrating bodies
 
 public:
-    // void Solve() override;
+    PenetrationConstraint();
+    PenetrationConstraint(Body *a, Body *b, const Vec2 &aCollisionPoint, const Vec2 &bCollisionPoint, const Vec2 &normal);
+    void PreSolve(const float dt) override;
+    void Solve() override;
+    void PostSolve() override;
 };
 
 #endif

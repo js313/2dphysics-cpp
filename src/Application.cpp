@@ -2,6 +2,7 @@
 #include "./Physics/Constants.h"
 #include "./Physics/Force.h"
 #include "./Physics/CollisionDetection.h"
+#include "./Physics/Contact.h"
 
 bool Application::IsRunning()
 {
@@ -21,7 +22,7 @@ void Application::Setup()
     for (int i = 0; i < NUM_BODIES; i++)
     {
         float mass = (i == 0) ? 0 : 1;
-        Body *body = new Body(new BoxShape(30, 30), Graphics::Width() / 2.0 - i * 40, 100, mass);
+        Body *body = new Body(BoxShape(30, 30), Graphics::Width() / 2.0 - i * 40, 100, mass);
         body->SetTexture("./assets/crate.png");
         world->AddBody(body);
     }
@@ -48,40 +49,24 @@ void Application::Input()
         case SDL_KEYDOWN:
             if (event.key.keysym.sym == SDLK_ESCAPE)
                 running = false;
-            if (event.key.keysym.sym == SDLK_UP)
-                pushForce.y = -50 * PIXELS_PER_METRE;
-            if (event.key.keysym.sym == SDLK_DOWN)
-                pushForce.y = 50 * PIXELS_PER_METRE;
-            if (event.key.keysym.sym == SDLK_LEFT)
-                pushForce.x = -50 * PIXELS_PER_METRE;
-            if (event.key.keysym.sym == SDLK_RIGHT)
-                pushForce.x = 50 * PIXELS_PER_METRE;
             if (event.key.keysym.sym == SDLK_d)
                 debug = !debug;
             break;
         case SDL_KEYUP:
-            if (event.key.keysym.sym == SDLK_UP)
-                pushForce.y = 0;
-            if (event.key.keysym.sym == SDLK_DOWN)
-                pushForce.y = 0;
-            if (event.key.keysym.sym == SDLK_LEFT)
-                pushForce.x = 0;
-            if (event.key.keysym.sym == SDLK_RIGHT)
-                pushForce.x = 0;
             break;
         case SDL_MOUSEBUTTONDOWN:
             if (event.button.button == SDL_BUTTON_LEFT)
             {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
-                Body *stone = new Body(new PolygonShape({Vec2(-15, 5), Vec2(-15, 0), Vec2(-5, -10), Vec2(15, -10), Vec2(20, 5), Vec2(10, 10)}), x, y, 10.0);
+                Body *stone = new Body(PolygonShape({Vec2(-15, 5), Vec2(-15, 0), Vec2(-5, -10), Vec2(15, -10), Vec2(20, 5), Vec2(10, 10)}), x, y, 10.0);
                 world->AddBody(stone);
             }
             if (event.button.button == SDL_BUTTON_RIGHT)
             {
                 int x = 0, y = 0;
                 SDL_GetMouseState(&x, &y);
-                Body *basketball = new Body(new CircleShape(20.0), x, y, 10.0);
+                Body *basketball = new Body(CircleShape(20.0), x, y, 10.0);
                 basketball->SetTexture("./assets/basketball.png");
                 world->AddBody(basketball);
             }
@@ -101,23 +86,23 @@ void Application::Input()
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Update()
 {
-    // Cap FPS
-    static int lastFrameTime;
-    int timeToWait = MILLISECS_PER_FRAME - (SDL_GetTicks() - lastFrameTime);
+    Graphics::ClearScreen(0xFF0F0721);
+
+    // Wait some time until the reach the target frame time in milliseconds
+    static int timePreviousFrame;
+    int timeToWait = MILLISECS_PER_FRAME - (SDL_GetTicks() - timePreviousFrame);
     if (timeToWait > 0)
         SDL_Delay(timeToWait);
 
-    // To achieve framerate independent movement
-    // Calculate this only after applying delay(capping FPS), or else the lastFrameTime won't be correct.
-    // it would take the frame that we decided not to update anything on as the last frame, we want the frame
-    // that made changes to the screen
-    int currentFrameTime = SDL_GetTicks();
-    float deltaTime = (currentFrameTime - lastFrameTime) / 1000.0f;
-    if (deltaTime > 0.016) // for 60FPS each frame is at max 0.016s
+    // Calculate the deltatime in seconds
+    float deltaTime = (SDL_GetTicks() - timePreviousFrame) / 1000.0f;
+    if (deltaTime > 0.016)
         deltaTime = 0.016;
 
-    lastFrameTime = currentFrameTime;
+    // Set the time of the current frame to be used in the next one
+    timePreviousFrame = SDL_GetTicks();
 
+    // Update world bodies (integration, collision detection, etc.)
     world->Update(deltaTime);
 }
 
@@ -126,36 +111,47 @@ void Application::Update()
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Render()
 {
-    Graphics::ClearScreen(0xFF056263);
+    // Draw background texture
+    Graphics::DrawTexture(Graphics::Width() / 2.0, Graphics::Height() / 2.0, Graphics::Width(), Graphics::Height(), 0.0f, bgTexture);
 
-    auto constraints = world->GetConstraints();
-    for (int i = 1; i < constraints.size(); i++)
-    {
-        Graphics::DrawLine(constraints[i]->a->position.x, constraints[i]->a->position.y, constraints[i - 1]->a->position.x, constraints[i - 1]->a->position.y, 0xFF00FF00);
-    }
-
-    for (Body *body : world->GetBodies())
+    // Draw all bodies
+    for (auto &body : world->GetBodies())
     {
         if (body->shape->GetType() == CIRCLE)
         {
             CircleShape *circleShape = (CircleShape *)body->shape;
             if (!debug && body->texture)
-                Graphics::DrawTexture(body->position.x, body->position.y, 2 * circleShape->radius, 2 * circleShape->radius, body->rotation, body->texture);
+            {
+                Graphics::DrawTexture(body->position.x, body->position.y, circleShape->radius * 2, circleShape->radius * 2, body->rotation, body->texture);
+            }
             else
-                Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, 0xFF00FF00);
+            {
+                Graphics::DrawCircle(body->position.x, body->position.y, circleShape->radius, body->rotation, 0xFF0000FF);
+            }
         }
-        else if (body->shape->GetType() == BOX)
+        if (body->shape->GetType() == BOX)
         {
             BoxShape *boxShape = (BoxShape *)body->shape;
             if (!debug && body->texture)
+            {
                 Graphics::DrawTexture(body->position.x, body->position.y, boxShape->width, boxShape->height, body->rotation, body->texture);
+            }
             else
-                Graphics::DrawPolygon(body->position.x, body->position.y, boxShape->globalVertices, 0xFF00FF00);
+            {
+                Graphics::DrawPolygon(body->position.x, body->position.y, boxShape->worldVertices, 0xFF0000FF);
+            }
         }
-        else if (body->shape->GetType() == POLYGON)
+        if (body->shape->GetType() == POLYGON)
         {
             PolygonShape *polygonShape = (PolygonShape *)body->shape;
-            Graphics::DrawPolygon(body->position.x, body->position.y, polygonShape->globalVertices, 0xFF00FF00);
+            if (!debug && body->texture)
+            {
+                Graphics::DrawTexture(body->position.x, body->position.y, polygonShape->width, polygonShape->height, body->rotation, body->texture);
+            }
+            else
+            {
+                Graphics::DrawPolygon(body->position.x, body->position.y, polygonShape->worldVertices, 0xFF0000FF);
+            }
         }
     }
     Graphics::RenderFrame();
@@ -166,6 +162,7 @@ void Application::Render()
 ///////////////////////////////////////////////////////////////////////////////
 void Application::Destroy()
 {
+    SDL_DestroyTexture(bgTexture);
     delete world;
     Graphics::CloseWindow();
 }

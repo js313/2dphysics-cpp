@@ -1,15 +1,13 @@
 #ifndef BODY_H
 #define BODY_H
 
-#include "Vec2.h"
-#include "Shape.h"
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include "Vec2.h"
+#include "Shape.h"
 
 struct Body
 {
-    bool isColliding;
-
     // Linear motion
     Vec2 position;
     Vec2 velocity;
@@ -20,47 +18,52 @@ struct Body
     float angularVelocity;
     float angularAcceleration;
 
+    // Forces and torque
     Vec2 sumForces;
-    float sumTorques;
+    float sumTorque;
 
-    // mass
+    // Mass and Moment of Inertia
     float mass;
     float invMass;
-    // moment of inertia
     float I;
     float invI;
 
+    // Coefficient of restitution (elasticity)
     float restitution;
+
+    // Coefficient of friction
     float friction;
 
-    Shape *shape;
+    // Pointer to the shape/geometry of this rigid body
+    Shape *shape = nullptr;
 
+    // Pointer to an SDL texture
     SDL_Texture *texture = nullptr;
+
+    Body(const Shape &shape, float x, float y, float mass);
+    ~Body();
+
+    bool IsStatic() const;
+
+    void AddForce(const Vec2 &force);
+    void AddTorque(float torque);
+    void ClearForces();
+    void ClearTorque();
 
     void SetTexture(const char *textureFileName);
 
-    Body(Shape *shape, float x, float y, float mass);
-    ~Body();
+    Vec2 LocalSpaceToWorldSpace(const Vec2 &point) const;
+    Vec2 WorldSpaceToLocalSpace(const Vec2 &point) const;
+
+    void ApplyImpulseLinear(const Vec2 &j);
+    void ApplyImpulseAngular(const float j);
+    void ApplyImpulseAtPoint(const Vec2 &j, const Vec2 &r);
 
     void IntegrateLinear(float dt);
     void IntegrateAngular(float dt);
 
-    void AddForce(const Vec2 &force);
-    void AddTorque(float torque);
-
-    void ClearForces();
-    void ClearTorques();
-
-    void IntegrateForces(float dt);
-    void IntegrateVelocities(float dt);
-
-    bool IsStatic() const;
-    void ApplyImpulseLinear(const Vec2 &j);
-    void ApplyImpulseAngular(float j);
-    void ApplyImpulseAtPoint(const Vec2 &j, const Vec2 &r);
-
-    Vec2 LocalSpaceToWorldSpace(const Vec2 &point);
-    Vec2 WorldSpaceToLocalSpace(const Vec2 &point);
+    void IntegrateForces(const float dt);
+    void IntegrateVelocities(const float dt);
 };
 
 #endif

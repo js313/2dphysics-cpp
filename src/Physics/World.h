@@ -1,16 +1,17 @@
 #ifndef WORLD_H
 #define WORLD_H
 
-#include "Body.h"
-#include "Constraint.h"
+#include "./Body.h"
+#include "./Constraint.h"
 #include <vector>
 
 class World
 {
 private:
-    float G = 9.8f;
+    float G = 9.8;
     std::vector<Body *> bodies;
     std::vector<Constraint *> constraints;
+
     std::vector<Vec2> forces;
     std::vector<float> torques;
 
