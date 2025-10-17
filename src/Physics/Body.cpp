@@ -26,6 +26,7 @@ Body::Body(Shape *shape, float x, float y, float mass)
         this->invI = 1.0 / I;
     this->restitution = 1.0;
     this->friction = 0.7;
+    shape->UpdateVertices(rotation, position);
 
     std::cout << "Body constructor called!\n";
 }

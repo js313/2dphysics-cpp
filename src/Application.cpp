@@ -16,24 +16,20 @@ void Application::Setup()
     running = Graphics::OpenWindow();
     world = new World(-9.8f);
 
-    // Body *bigBox = new Body(new BoxShape(100, 100), Graphics::Width() / 2, 500, 0.0);
-    // bigBox->restitution = 0.1;
-    // bigBox->rotation = 0.1;
-    // bigBox->SetTexture("./assets/crate.png");
+    const int NUM_BODIES = 10;
 
-    // Body *floor = new Body(new BoxShape(Graphics::Width() - 100, 200), Graphics::Width() / 2, Graphics::Height() - 150, 0.0);
+    for (int i = 0; i < NUM_BODIES; i++)
+    {
+        float mass = (i == 0) ? 0 : 1;
+        Body *body = new Body(new BoxShape(30, 30), Graphics::Width() / 2.0 - i * 40, 100, mass);
+        body->SetTexture("./assets/crate.png");
+        world->AddBody(body);
+    }
 
-    // world->AddBody(bigBox);
-    // world->AddBody(floor);
-
-    Body *a = new Body(new CircleShape(30), Graphics::Width() / 2.0, Graphics::Height() / 2.0, 0.0f);
-    Body *b = new Body(new CircleShape(20), a->position.x - 100, a->position.y, 1.0f);
-
-    world->AddBody(a);
-    world->AddBody(b);
-
-    JointConstraint *joint = new JointConstraint(a, b, a->position);
-    world->AddConstraint(joint);
+    for (int i = 0; i < NUM_BODIES - 1; i++)
+    {
+        world->AddConstraint(new JointConstraint(world->GetBodies()[i], world->GetBodies()[i + 1], world->GetBodies()[i]->position));
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -131,6 +127,13 @@ void Application::Update()
 void Application::Render()
 {
     Graphics::ClearScreen(0xFF056263);
+
+    auto constraints = world->GetConstraints();
+    for (int i = 1; i < constraints.size(); i++)
+    {
+        Graphics::DrawLine(constraints[i]->a->position.x, constraints[i]->a->position.y, constraints[i - 1]->a->position.x, constraints[i - 1]->a->position.y, 0xFF00FF00);
+    }
+
     for (Body *body : world->GetBodies())
     {
         if (body->shape->GetType() == CIRCLE)

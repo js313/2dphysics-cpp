@@ -93,10 +93,19 @@ void World::Update(float dt)
         body->IntegrateForces(dt);
     }
 
-    // Solve all constraints
+    // Pre Solve all constraints
     for (auto &constraint : constraints)
     {
-        constraint->Solve();
+        constraint->PreSolve(dt);
+    }
+
+    // Solve all constraints
+    for (int i = 0; i < 10; i++)
+    {
+        for (auto &constraint : constraints)
+        {
+            constraint->Solve();
+        }
     }
 
     // Integrate all the velocities
@@ -105,7 +114,7 @@ void World::Update(float dt)
         body->IntegrateVelocities(dt);
     }
 
-    CheckCollisions();
+    // CheckCollisions();
 }
 
 void World::CheckCollisions()

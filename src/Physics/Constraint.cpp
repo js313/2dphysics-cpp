@@ -28,16 +28,20 @@ VecN Constraint::GetVelocities()
     return V;
 }
 
-JointConstraint::JointConstraint() : Constraint(), jacobian(1, 6) {};
-JointConstraint::JointConstraint(Body *a, Body *b, const Vec2 &anchorPoint) : Constraint(), jacobian(1, 6)
+JointConstraint::JointConstraint() : Constraint(), jacobian(1, 6), cachedLambda(1), bias(0.0f)
+{
+    cachedLambda.Zero();
+};
+JointConstraint::JointConstraint(Body *a, Body *b, const Vec2 &anchorPoint) : Constraint(), jacobian(1, 6), cachedLambda(1), bias(0.0f)
 {
     this->a = a;
     this->b = b;
     aPoint = this->a->WorldSpaceToLocalSpace(anchorPoint);
     bPoint = this->b->WorldSpaceToLocalSpace(anchorPoint);
+    cachedLambda.Zero();
 };
 
-void JointConstraint::Solve()
+void JointConstraint::PreSolve(const float dt)
 {
     const Vec2 pa = a->LocalSpaceToWorldSpace(aPoint);
     const Vec2 pb = b->LocalSpaceToWorldSpace(bPoint);
@@ -47,39 +51,58 @@ void JointConstraint::Solve()
 
     jacobian.Zero();
 
-    Vec2 J1 = (pa - pb) * 2;
-    jacobian.rows[0][0] = J1.x; // A linear velocity
-    jacobian.rows[0][1] = J1.y; // A linear velocity
+    Vec2 J1 = (pa - pb) * 2.0;
+    jacobian.rows[0][0] = J1.x; // A linear velocity.x
+    jacobian.rows[0][1] = J1.y; // A linear velocity.y
 
-    float J2 = ra.Cross(pa - pb) * 2;
+    float J2 = ra.Cross(pa - pb) * 2.0;
     jacobian.rows[0][2] = J2; // A angular velocity
 
-    Vec2 J3 = (pb - pa) * 2;
-    jacobian.rows[0][3] = J3.x; // B linear velocity
-    jacobian.rows[0][4] = J3.y; // B linear velocity
+    Vec2 J3 = (pb - pa) * 2.0;
+    jacobian.rows[0][3] = J3.x; // B linear velocity.x
+    jacobian.rows[0][4] = J3.y; // B linear velocity.y
 
-    float J4 = rb.Cross(pb - pa) * 2;
+    float J4 = rb.Cross(pb - pa) * 2.0;
     jacobian.rows[0][5] = J4; // B angular velocity
 
+    // Warm starting (apply cached lambda)
+    const MatMN Jt = jacobian.Transpose();
+    VecN impulses = Jt * cachedLambda;
+
+    // Apply the impulses to both bodies
+    a->ApplyImpulseLinear(Vec2(impulses[0], impulses[1])); // A linear impulse
+    a->ApplyImpulseAngular(impulses[2]);                   // A angular impulse
+    b->ApplyImpulseLinear(Vec2(impulses[3], impulses[4])); // B linear impulse
+    b->ApplyImpulseAngular(impulses[5]);                   // B angular impulse
+
+    // Compute the bias term (baumgarte stabilization)
+    const float beta = 0.02f;
+    float C = (pb - pa).Dot(pb - pa);
+    C = std::max(0.0f, C - 0.01f);
+    bias = (beta / dt) * C;
+}
+
+void JointConstraint::Solve()
+{
     const VecN V = GetVelocities();
     const MatMN invM = GetInvM();
 
     const MatMN J = jacobian;
-    // Direction of impulses
     const MatMN Jt = jacobian.Transpose();
 
-    VecN rhs = J * V * -1.0f;
-    MatMN lhs = J * invM * Jt;
-
-    // Magnitude of impulses
+    // Compute lambda using Ax=b (Gauss-Seidel method)
+    MatMN lhs = J * invM * Jt; // A
+    VecN rhs = J * V * -1.0f;  // b
+    rhs[0] -= bias;
     VecN lambda = MatMN::SolveGaussSeidel(lhs, rhs);
+    cachedLambda += lambda;
 
-    // Impulses with direction and magnitude
+    // Compute the impulses with both direction and magnitude
     VecN impulses = Jt * lambda;
 
-    a->ApplyImpulseLinear(Vec2(impulses[0], impulses[1]));
-    a->ApplyImpulseAngular(impulses[2]);
-
-    b->ApplyImpulseLinear(Vec2(impulses[3], impulses[4]));
-    b->ApplyImpulseAngular(impulses[5]);
+    // Apply the impulses to both bodies
+    a->ApplyImpulseLinear(Vec2(impulses[0], impulses[1])); // A linear impulse
+    a->ApplyImpulseAngular(impulses[2]);                   // A angular impulse
+    b->ApplyImpulseLinear(Vec2(impulses[3], impulses[4])); // B linear impulse
+    b->ApplyImpulseAngular(impulses[5]);                   // B angular impulse
 }

@@ -20,16 +20,20 @@ public:
     MatMN GetInvM();
     VecN GetVelocities();
 
+    virtual void PreSolve(float dt) {};
     virtual void Solve() {};
 };
 
 class JointConstraint : public Constraint
 {
     MatMN jacobian;
+    VecN cachedLambda;
+    float bias;
 
 public:
     JointConstraint();
     JointConstraint(Body *a, Body *b, const Vec2 &anchorPoint);
+    void PreSolve(float dt) override;
     void Solve() override;
 };
 
